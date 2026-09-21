@@ -4,7 +4,8 @@ Where used
 ----------
 Results -> "Performance of 2-of-3 Consensus Call Sets across Coverages":
     Table 7   binary classification of the four coverages and the SNP array
-    Figure 11  benchmark recovery as an UpSet plot, and array/sequencing containment
+    Figure 11  benchmark recovery as an UpSet plot, and each coverage's
+               recoveries crossed with the array's
     Figure 12  precision, recall and F1 against CNV size across coverages,
                for deletions and for duplications
     every number quoted in that section
@@ -21,8 +22,9 @@ assumes:
     over one fixed universe of intervals and the five columns can be crossed
     directly. This is what the UpSet plot draws, and it replaces the four
     three-way Venn diagrams of the earlier draft.
-  * the containment of each recovery set in the other, which is the
-    replacement-versus-supplement question stated as two fractions.
+  * each coverage's recoveries crossed with the array's, which is the
+    replacement-versus-supplement question: how many intervals only one of the
+    two recovers, and how many both do.
   * variant class composition, since the sets drift towards duplications as
     depth falls while the benchmark does not, and that shifts the metrics for a
     reason unrelated to depth. The size curves are drawn per class for the same
@@ -56,7 +58,7 @@ ROOT = Path("/lab01/Projects/Lionel_Projects/blendedCNV_pipeline")
 
 # Chromosome ids have to order the genome rather than the order the BEDs
 # happen to be read in, so the registry is seeded before any CallSet is built.
-seed_chromosomes(read_genome_file(ROOT / "data" / "genome_primary_hg38.txt"))
+seed_chromosomes(read_genome_file(ROOT / "src" / "consensuscnv" / "templates" / "genome_primary_hg38.txt"))
 DEST = ROOT / "results" / "coverage_performance"
 TABLES = ROOT / "results" / "manuscript"
 
@@ -467,27 +469,42 @@ ax_totals.set_xticks([0, 2000, 4000], ["0", "2k", "4k"])
 for side in ("top", "right", "left"):
     ax_totals.spines[side].set_visible(False)
 
-# (B) The two containment fractions. They answer whether sequencing subsumes the
-# array or discovers a different population, and they cross between 4x and 2x.
+# (B) Each coverage's recoveries crossed with the array's, as one stacked bar
+# over the union of the two sets: consensus only, both, array only. The array
+# recovers the same 574 intervals at every coverage, so the top two segments
+# always sum to 574, and the crossing between 4x and 2x reads off the bars as
+# the array-only segment overtaking the consensus-only one. The two containment
+# fractions are the ratios of segment heights, quoted in the text.
 ax = right.subplots()
 right.subplots_adjust(left=0.24, right=0.98, top=0.90, bottom=0.185)
 depths = np.arange(len(COVERAGES))
-for column, color, marker in (("array_recovery_shared", "#767676", "o"),
-                              ("sequencing_recovery_shared", "#08519C", "s")):
-    ax.plot(depths, containment[column], color=color, marker=marker, markersize=4,
-            linewidth=1.2, markeredgecolor="white", markeredgewidth=0.5, zorder=3)
+SEGMENTS = (
+    ("n_sequencing_only", "Consensus only", "#4292C6", "white"),
+    ("n_shared", "Both", "#08306B", "white"),
+    ("n_array_only", "Array only", "#BDBDBD", "black"),
+)
+# A segment shorter than this is labelled beside the bar rather than inside it.
+MIN_INSIDE = 200
+bottom = np.zeros(len(COVERAGES))
+for column, label, color, ink in SEGMENTS:
+    heights = containment[column].to_numpy(dtype=float)
+    ax.bar(depths, heights, bottom=bottom, width=0.62, color=color, label=label,
+           edgecolor="white", linewidth=0.5, zorder=2)
+    for x, height, base in zip(depths, heights, bottom, strict=True):
+        if height >= MIN_INSIDE:
+            ax.text(x, base + height / 2, f"{int(height):,}", ha="center", va="center",
+                    fontsize=5.5, color=ink, zorder=3)
+        else:
+            ax.text(x + 0.36, base + height / 2, f"{int(height):,}", ha="left",
+                    va="center", fontsize=5.5, zorder=3)
+    bottom += heights
 ax.set_xticks(depths, COVERAGES)
-ax.set_xlim(-0.3, len(COVERAGES) - 0.7)
-ax.set_ylim(0, 1)
+ax.set_xlim(-0.6, len(COVERAGES) - 0.4)
+ax.set_ylim(0, bottom.max() * 1.08)
 ax.set_xlabel("Sequencing coverage", labelpad=2)
-ax.set_ylabel("Shared with the other method", labelpad=2)
-ax.legend(handles=[
-    Line2D([], [], color="#767676", marker="o", markersize=3.6, linewidth=1.2,
-           label="of array recoveries"),
-    Line2D([], [], color="#08519C", marker="s", markersize=3.6, linewidth=1.2,
-           label="of sequencing recoveries"),
-], frameon=False, loc="upper center", handlelength=1.4, borderpad=0,
-    labelspacing=0.22, handletextpad=0.4)
+ax.set_ylabel("Benchmark intervals recovered", labelpad=2)
+ax.legend(frameon=False, loc="upper right", handlelength=1.0, handleheight=1.0,
+          borderpad=0, labelspacing=0.3, handletextpad=0.5)
 panel(ax, "B", x=-0.30)
 
 save(fig, "benchmark_recovery")

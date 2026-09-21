@@ -56,7 +56,7 @@ ROOT = Path("/lab01/Projects/Lionel_Projects/blendedCNV_pipeline")
 
 # Chromosome ids have to order the genome rather than the order the BEDs
 # happen to be read in, so the registry is seeded before any CallSet is built.
-seed_chromosomes(read_genome_file(ROOT / "data" / "genome_primary_hg38.txt"))
+seed_chromosomes(read_genome_file(ROOT / "src" / "consensuscnv" / "templates" / "genome_primary_hg38.txt"))
 DEST = ROOT / "results" / "consensus_levels"
 TABLES = ROOT / "results" / "manuscript"
 
