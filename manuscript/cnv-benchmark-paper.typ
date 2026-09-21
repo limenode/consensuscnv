@@ -1312,7 +1312,7 @@ This is particularly promising compared to the relatively limited scalability of
 As a result, lcWGS-based CNV detection has already seen some adaptation as a promising alternative to microarray-based analyses #c[Boltz 2026] #c[Wang 2019].
 
 Several other tools were either dismissed as inappropriate for use with the data analyzed in this study or introduced significant complexity for negligible differences in performance compared to the three tools we had chosen (Supplemental Table Tools).
-Other studies #c[Gabrielaite 2021] have made it clear that the use of tools designed specifically for WES data are significantly outperformed by tools that use WGS data.
+Other studies #c[Gabrielaite 2021] have made it clear that tools designed specifically for WES data are significantly outperformed by tools that use WGS data.
 ZipCNV #c[Xue 2025], a tool that uses base level read-depth information along with dynamic sliding windows to smooth depth signals and more accurately identify CNVs, was tested as a promising candidate tool.
 However, our attempts at using the tool on the high-performance cluster used for this study were unsuccessful due to the program demonstrating major I/O and memory usage issues.
 LUMPY #c[Layer 2014] was considered because of its strong reported performance and its probabilistic framework for integrating multiple SV signals.
@@ -1321,10 +1321,22 @@ However, because our consensus set already included two read-depth-based callers
 DELLY instead uses discordant paired-end clusters to nominate breakpoint-containing intervals and then refines these candidates using split-read support to achieve higher-resolution breakpoint definition.
 We therefore selected DELLY over LUMPY to increase methodological complementarity across callers and reduce the likelihood that technology- or algorithm-specific artifacts would propagate into the consensus call set.
 
+Additionally, another key motivation for using the three chosen tools was that they seemed to identify demonstrably different populations: those carried by CNVpytor alone have a median size of 21,000 bp against 2,000 bp for GATK-gCNV alone and 2,148 bp for Delly alone, and the categories containing Delly carry the largest duplication shares at every level of agreement (Table 2).
+The null model of a single population of events detected at fixed per-caller rates was rejected on the same grounds: fitted to the overlapping calls alone, it predicts 813 caller-private components, against the 19,287 observed (Table 3).
+Those private components have a precision of 0.263, against 0.824 where two callers agree and 0.973 where all three do.
+Requiring agreement removes a low-precision call only when no second caller reproduces it.
+Had two of the three callers shared an algorithmic basis, the artifacts that arise from that algorithm's limitations would have been more likely reproduced by both, and a low-precision population would have been carried into the consensus call set even at the higher consensus stringencies.
+
 Duplications are a known hard class to detect in short-read CNV/SV analysis and often show more caller disagreement and metric sensitivity #c[Ho 2020].
 Independent lcWGS benchmarking echoes this: amplification calls diverged most across callers and were prone to over-detection in sparse data, whereas deletion calls remained comparatively stable #c[Wang 2025].
-This is consistent across all of our obtained results, which demonstrated that duplication-only CNV calls yielded much lower performance, much higher variance, and different performance distribution trends compared to the deletion-only calls.
-This expected behavior was the primary motivation behind stratifying all results across the two primary types of structural variation.
+Our results corroborate with this at every coverage.
+Duplications were detected with lower precision and much lower recall than deletions: duplication precision fell from 0.687 at 30x to 0.552, 0.475, and 0.327 while deletion precision held between 0.890 and 0.934, and duplication recall did not exceed 0.051 against 0.240 for deletions at 30x (Table 7).
+The array's duplication calls had a precision of 0.101, at a recall of 0.011.
+The two classes also peak in different size regimes, with deletion F1 peaking between 10 and 40 kb depending on coverage and duplication F1 peaking above 100 kb at every coverage (Figure 12).
+Duplication detection also responds far less to depth than deletion detection does.
+The number of benchmark duplications recovered fell three-fold from 30x to 2x, from 327 to 111, while recovered deletions fell twelve-fold, from 4,017 to 340 (Table 7).
+The number of duplication calls barely moved over the same range, from 476 to 339, because the calls without benchmark support rose from 149 to 228 as the supported ones fell, which matches the over-detection in sparse data that #c[Wang 2025] reported.
+This is in line with our expectation that the detection of duplications from short-read data is limited by the data type rather than by its depth, and it is why every performance statistic is reported by class.
 
 // NOTE(lionel): condensed on 2026-08-17 from the original intersection-vs-union
 // paragraph, since that axis was cut from Methods and Results. The [English 2022]
