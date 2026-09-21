@@ -1246,7 +1246,8 @@ The SNP array recovers more deletions than the 2x set, at a recall of 0.030 agai
   (A) UpSet plot of the benchmark intervals each call set recovered.
   Each bar counts the intervals recovered by exactly the combination of call sets marked beneath it, and the horizontal bars at left give each call set's total.
   The twelve largest of the 27 non-empty combinations are drawn, holding 4,391 of the 4,499 recovered intervals; the 18,694 intervals no call set recovered are not shown.
-  (B) The two containment fractions relating each coverage's recoveries to the array's: the fraction of the intervals recovered by the array that the consensus set also recovered, and the fraction of those recovered by the consensus set that the array also recovered.
+  (B) The intervals recovered by each coverage's consensus set, by the SNP array, or by both, partitioning the union of the two recovery sets at each coverage.
+  The array recovers the same 574 intervals at every coverage, so the two upper segments always sum to 574.
 ]
 
 #v(0.8em)
@@ -1256,9 +1257,9 @@ All five call sets were classified against the same 23,193 benchmark intervals, 
 The coverage sets are close to nested: 95.4% of the intervals recovered at 6x are also recovered at 30x, 89.8% of those recovered at 4x are recovered at 6x, and 88.9% of those recovered at 2x are recovered at 4x.
 The four largest combinations follow this nesting, with 2,697 intervals recovered by the 30x set alone and 506, 311 and 234 as each successive coverage is added.
 
-The 30x set recovers 524 of the 574 benchmark intervals the array recovers, or 91.3%, along with 3,820 the array does not, leaving 50 intervals to the array alone.
-That share falls to 51.6%, 41.1% and 25.3% at 6x, 4x and 2x, while the share of the sequencing set's own recoveries that the array also holds rises from 12.1% to 32.2% (Figure 11B).
-The two cross between 4x and 2x: the 2x set recovers 306 intervals the array does not against 429 recovered by the array alone, and 451 in total against the array's 574.
+The 30x set recovers 524 of the 574 benchmark intervals the array recovers, or 91.3%, along with 3,820 the array does not, leaving 50 intervals to the array alone (Figure 11B).
+The share of the array's recoveries the consensus set also holds falls to 51.6%, 41.1% and 25.3%, while the share of the consensus set's own recoveries that the array also holds rises from 12.1% to 32.2%.
+The array overtakes sequencing between 4x and 2x: the 2x set recovers 306 intervals the array does not against 429 recovered by the array alone, and 451 in total against the array's 574.
 
 #figure(
   image("/results/coverage_performance/coverage_size_metrics.png", width: 100%)
@@ -1286,16 +1287,27 @@ Lowering coverage removes small CNVs from the call set rather than degrading the
 
 With sequencing becoming increasingly ubiquitous in both research and clinical laboratories, a question has emerged for CNV analysis: can the low-pass, genome-wide data from the BGE workflow substitute SNP genotyping arrays as an approach for CNV detection in the size regimes typically targeted by microarray testing?
 BGE was developed to pair deep exome variant discovery with economical, low-pass genome-wide coverage in a single sequencing product, offering a potential path to consolidate CNV detection into existing sequencing pipelines rather than maintaining parallel array workflows and cross-platform data harmonization #c[DeFelice 2024] #c[Boltz 2026].
-In this study, we directly evaluated the "array-replacement" proposition by benchmarking CNV calls from short-read lcWGS against SNP-array derived CNV calls, while using high-coverage WGS as a complementary reference point to clarify which performance differences are primarily coverage-limited versus method-limited.
+In this study, we directly evaluated the "array-replacement" proposition by benchmarking CNV calls from short-read lcWGS against SNP array-derived CNV calls on the same thirteen individuals.
+The 6x, 4x, and 2x call sets were not generated from independent sequencing runs but by subsampling the same 30x alignments, so the four coverages share their samples, libraries, aligner, callers, and parameters, and differ in the reads retained.
+The 30x call set is therefore the theoretical ceiling of the same pipeline rather than an external reference point: a difference between two coverages is attributable to depth alone, whereas a difference between a sequencing call set and the array separates what is limited by coverage from what is limited by the method.
 
-Aligning with discoveries made by other studies #c[Li and Olivier 2012], our results demonstrated that high-coverage sequencing-based approaches result in recovery of considerably more CNVs compared to SNP array-based alternatives, with particularly higher call rates in the several kilobase regime.
-Coverages of 2x -- 6x that are typically retrieved in current-day BGE pipelines seem to perform best in a mid-to-large CNV regime, similar to typical results of SNP arrays.
-Call sets at 4x coverage and above showed consistently higher precision and recall than SNP arrays across all sizes tested, with the performance scales substantially with the coverage.
-At 2x — the lowest coverage evaluated — overall performance was broadly comparable to the SNP array, with the 2x call set achieving substantially higher precision (0.564 vs. 0.336) while the SNP array modestly exceeded it in recall (0.062 vs. 0.048) and marginally in F₁ and F₂ scores.
-The results illustrate the high performance scalability of low-coverage sequencing-based CNV calling: recall nearly doubles when moving from 2x to 4x — surpassing SNP array performance across most of the analysis window — with a similar magnitude of increase demonstrated going from 4x to 6x.
+Low-pass WGS has been shown to support cost-effective CNV calling in several settings #c[Kucharík 2021] #c[Mazzonetto 2024] #c[Mazzonetto 2024 (2)], and our results place the 2x -- 6x coverages delivered by a BGE run against a SNP array on the same individuals, with a 30x ceiling derived from the same libraries.
+Call sets at 4x coverage and above exceeded the SNP array on both precision and recall, combined (precision 0.786 -- 0.898 against 0.371; recall 0.038 -- 0.187 against 0.025) and within each variant class (Table 7), and did so at every CNV size at which both could be estimated for precision and at every size above 3 kb for recall (Figure 12).
+At 2x, the lowest coverage evaluated, the sequencing call set retained the higher precision (0.626 against 0.371) while the array recovered more deletions (recall 0.030 against 0.020) and fewer duplications (0.011 against 0.017), and the array's deletion F1 exceeded the 2x set's below 18 kb and fell below it above.
+Recall doubled from 2x to 4x (0.019 to 0.038), rose a further 1.6-fold to 6x (0.061) and 3.1-fold to 30x (0.187), and deletion recall rose twelve-fold across the range (0.020 to 0.240).
+The gain came from the small end of the size range: lowering coverage removed small CNVs from the call set rather than degrading the calls that survived, with 2x deletion precision within 0.04 of the 30x set's and the deletion F1 peak moving from 10 kb at 30x to 40 kb at 2x, so the 2x -- 6x call sets performed best in the mid-to-large regime that SNP arrays are typically used to target.
+
+The intervals recovered by sequencing and by the array only partly coincide.
+The 30x set recovered 91.3% of the 574 benchmark intervals the array recovered, but that share fell to 51.6%, 41.1%, and 25.3% at 6x, 4x, and 2x, and the array overtook sequencing between 4x and 2x, with 429 intervals recovered by the array alone against 306 by the 2x set alone (Figure 11B).
+At BGE depths, sequencing therefore recovers more CNVs in total (880 -- 1,425 against 574 at 4x -- 6x) without recovering most of the array's, so the case for replacement rests on total yield and precision rather than on reproducing what an array would have reported.
+
+The precision gap is the largest difference in the comparison and the one with the most direct consequence for use.
+Of the array's 1,548 calls, 974 (62.9%) matched no benchmark interval, against 270 of 721 (37.4%) at 2x and 492 of 4,836 (10.2%) at 30x; on deletions alone the array's precision was 0.599 against 0.890 -- 0.934 for every sequencing call set, and on duplications 0.101 against 0.327 -- 0.687 (Table 7).
+A candidate CNV carried into downstream analysis or functional validation costs about the same to follow up whether or not it is real #c[Ho 2020] #c[Liu 2022], so at these precisions the array requires 2.7 candidates to be followed up per call with benchmark support, and 1.7 for deletions alone, against 1.6 at 2x and 1.1 -- 1.3 at 4x and above.
+Where the goal is diagnosis or etiology discovery, that follow-up is part of the per-sample cost of the assay, and it widens the margin in favour of sequencing beyond the sequencing cost alone.
 
 BGE incurs roughly 28% of the per-sample cost of deep WGS (\~\$99 vs. \$350) while remaining cost-comparable to a GWAS array #c[Boltz 2026].
-Combined with its ease of adaptability and the scalability of sequencing, this narrows the competitive margin of SNP array–based calling over sequencing-based approaches.
+Combined with the adaptability and the scalability of sequencing, this narrows the competitive margin of SNP array–based calling over sequencing-based approaches.
 This is particularly promising compared to the relatively limited scalability of SNP array technology: instead of simply rerunning genomic samples through sequencing pipelines with different parameters, expanding array detection requires the purchasing of new microarray chips and associated infrastructure, as well as potentially modifying existing computational workflows to handle the new data.
 As a result, lcWGS-based CNV detection has already seen some adaptation as a promising alternative to microarray-based analyses #c[Boltz 2026] #c[Wang 2019].
 
