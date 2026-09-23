@@ -122,11 +122,11 @@
 - Expanded call set parsing and analysis sections of Results, see #link(<r_input_call_sets>)[Input Call Sets After Parsing] and #link(<r_sequence_consensus>)[Sequence-based Consensus Call Set Construction].
   - Before, these sections were combined into one and much shorter because of how trivial our old operations were. Now we have considerably more information so I decided to split the sections up between statistics on the raw counts from all call set sources after the initial parsing step, and the consensus calling which now includes the new null model for identifying the populations of calls within the consensus set.
   - The Venn diagram for the Consensus section has been updated, and now there are tables for the breakdown of all 7 parts of the Venn diagram (3 for single-callers, 3 for pairwise combinations, and 1 for all callers).
-- Added parameterization section, see #link(<r_parameterizing>)[Parameterizing the Comparison].
+- Added parameterization section, Parameterizing the Comparison (moved to Supplementary Note S1 on 2026-09-23).
   - This includes four subsections: Benchmark Padding, Size Floor, Consensus reciprocal overlap threshold, and Classification reciprocal overlap threshold.
   - The performance of the query/benchmark comparison is analyzed across the appropriate range for each parameter of interest.
   - This is coupled with a subsequent section on the Variance-based sensitivity analysis to show that the combined effects of parameter combinations are not significant enough to warrant a combinatorial analysis, and that analyzing each parameter one at a time is sufficient enough.
-- Added sensitivity analysis and Pareto front sections in Methods, see #link(<m_vbsa_pf>)[Variance-based sensitivity analysis and Pareto front].
+- Added sensitivity analysis and Pareto front sections in Methods, Variance-based sensitivity analysis and Pareto front (moved with its Results to Supplementary Note S2 on 2026-09-23).
   - This includes the equations for deriving the first-order Sobol index, and how this corresponds to the contribution that each parameter has to a given performance metric.
   - The aggregation of the first order Sobol indices is a measure of the extent to which the one-at-a-time profiles describe the behavior of the pipeline compared to the joint effects of multiple parameters. If the first order Sobol indices add to close to 1, that means that the combined affects of parameters are negligible and that the one-at-a-time profiles are reasonable methods to determine individual parameter optimums.
   - The Pareto front shows all of the parameter combinations that yield the best performance assuming that a subset of other parameters are leaved fixed. This discards all combinations that are strictly worse than others, and yields a "front" of combinations. We show the Pareto front on a Precision vs. Recall graph, which points corresponding to one combination of four different parameters (benchmark padding, size floor, consensus reciprocal overlap, classification reciprocal overlap).
@@ -382,7 +382,7 @@ Its intended role is to absorb the breakpoint imprecision between benchmark sets
 Once $p$ approaches their typical span, bridging no longer joins two descriptions of one variant and begins fusing descriptions of distinct ones.
 A second consequence follows from the order of operations, the size floor being applied after merging rather than before it: fusion can carry a run of sub-floor fragments across the floor as a single interval.
 This is intended to aggregate these runs of near-adjacent fragments into larger intervals such as those sequence-based callers with limited, short read-based evidence are more likely to identify.
-Padding was profiled over \[0, 100 kb\], a range wide enough to reach the regime in which it dominates the intervals it is applied to, and the transitions are reported with the results.
+Padding was profiled over \[0, 100 kb\], a range wide enough to reach the regime in which it dominates the intervals it is applied to.
 For subsequent performance comparisons, padding was capped at 1 kb; this is the bin size common to all three callers and therefore the largest boundary error the comparison can be asked to tolerate.
 
 === Size floor
@@ -414,53 +414,10 @@ Match topology was therefore recorded on both sides alongside the metrics, since
 A threshold of exactly zero admits a single shared base pair as a match; it is retained in the profile, where it bounds the topology, and excluded from the joint grid.
 The threshold was profiled over \[0--0.99\] in steps of 0.01.
 
-== Variance-based sensitivity analysis and Pareto front <m_vbsa_pf>
+The results of the four profiles are given in Supplementary Note S1.
+The four parameters were also varied jointly over a full factorial grid, and the contribution of each to the variance of precision, recall, and F1 was quantified by variance-based sensitivity analysis, together with the Pareto front of precision against recall (Supplementary Note S2).
 
-The profiles above vary one parameter at a time.
-They describe the pipeline completely only if the effect of moving one parameter does not depend on where the other three are held, which is an assumption about the shape of the metric field rather than something the profiles themselves can show.
-All four parameters were therefore also varied jointly, over the full factorial grid of the ranges fixed above with padding taking \[0, 10, 25, 50, 100, 200, 400, 700, 1000\], the size floor taking \[0, 250, 500, 1000, 2000, 5000, 10000\], and both reciprocal-overlap thresholds taking \[0.05--0.95\] in steps of 0.05, and precision, recall, and F1 were evaluated at every combination together with the number of query and truth intervals entering it.
-What follows asks how much of the variation in each metric the one-at-a-time reading accounts for, and where a joint reading is required instead.
-
-=== Sensitivity Indices
-
-The contribution of each parameter was quantified by variance-based sensitivity analysis (Sobol', 1993).
-Writing $Y$ for a metric (precision, recall, f1) and $x_1, ..., x_4$ for the parameters, the first order Sobol index $S_i$ of parameter $i$ is the fraction of the metric's variance attributable to that parameter acting alone.
-
-$ S_i = ("Var" (EE [Y | X_i])) / ("Var" (Y)) $
-
-The total-order index $S_(T i)$ additionally includes every interaction involving $i$.
-
-$ S_(T i) = 1 - ("Var" (EE [Y | bold(X)_(tilde i)])) / ("Var" (Y)) $
-
-The difference $S_(T i) - S_i$ is the variance a parameter contributes only jointly with others.
-Because the design is a complete factorial grid, each conditional expectation is a marginal mean over the grid and both indices were computed exactly.
-The complete decomposition, comprising every term up to fourth order, sums to one, and this was verified numerically.
-
-=== Additivity
-
-The same decomposition expresses the metric field as a grand mean plus one univariate function per parameter:
-
-$ Y approx mu + sum_i f_i (X_i) wide "with" wide f_i (x) = EE [Y | X_i = x] - mu $
-
-The coefficient of determination of this additive model equals the sum of the first-order indices, and so quantifies directly the extent to which the one-at-a-time profiles of the preceding section describe the joint behavior of the pipeline.
-
-=== Dependence on the swept ranges
-
-Sobol indices are variance ratios with respect to a distribution over the inputs.
-They therefore describe sensitivity within the examined region and are not invariant to the choice of that region.
-As such, indices were additionally computed over an intentionally over-wide grid extending to $10^6$ bp (Supplementary Table X) in order to compare physical arguments for the previously described parameter boundaries with empirical data.
-
-=== Pareto front
-
-Because precision and recall span very different ranges across the grid, F1 is close to a monotone function of recall alone and obscures the trade-off between the two.
-Parameter settings were therefore also summarized by their Pareto front: a setting is dominated if another attains at least equal precision and recall and strictly exceeds it on one, and the front comprises the non-dominated settings.
-The front answers a different question from an optimum.
-It separates settings that buy precision at a real cost in recall from settings that are simply worse on both, so a dominated setting has no argument in its favor.
-Dominance compares measured performance, so it is informative only between settings that score the same events under the same definition of a match.
-Three of the four parameters do not satisfy that: the padding and the floor change which intervals enter the comparison, and the classification threshold changes what counts as a match, so for these the front records a change in the comparison rather than an improvement in the pipeline.
-Fronts were therefore computed over the whole grid and again with the classification threshold, and then the size floor, held at the values adopted for the pipeline.
-
-=== Implementation
+== Implementation
 
 Analyses were performed in Python \[3.14.6\] with NumPy \[2.5.1\] and SciPy \[1.18.0\].
 
@@ -757,248 +714,19 @@ Median component size moves in the opposite direction, rising within the 3/3 cal
 The calls that survive the strictest agreement requirement at low coverage are consequently few, large, and no longer preferentially deletions, and at 177 components the 2x 3/3 call set is too small to support a finer breakdown than that.
 
 
-== Parameterizing the Comparison <r_parameterizing>
-
-Four user-defined parameters govern the comparison: the padding applied to the benchmark records before the three benchmark sets are merged, the size floor below which no event is scored on either side, the reciprocal-overlap threshold at which calls from different callers are merged into a consensus call, and the reciprocal-overlap threshold at which a query call is credited against a benchmark interval.
-Each was bounded on physical grounds in the Methods.
-What follows reports what each one does to the comparison across its range, taking them in the order the pipeline applies them and holding the other three at their adopted values throughout: zero padding, a 1 kb floor, and a reciprocal overlap of 0.5 for both consensus construction and classification.
-
-=== Benchmark Padding
-
-The merged benchmark is built from three sets produced by different technologies and assemblies, so their breakpoints for the same variant do not coincide exactly, and padding is a standard remedy for that.
-The merged benchmark has a median interval of 132 bp (IQR \[71--338\] bp), so padding of even a few hundred base pairs is comparable in size to the intervals it is meant to reconcile.
-We swept padding from 0 to 100 kb and re-evaluated the comparison at every point (Figure 4).
-
-#figure(
-  image("/results/parameterization/benchmark_padding.png", width: 100%)
-)
-
-#cap("Figure 4:")[
-  Effect of benchmark padding on the truth set and on the comparison, swept from 0 to 100 kb.
-  Padding is applied to both ends of every benchmark record before the three benchmark sets are merged, and the 1 kb size floor is applied afterwards.
-  (A) Benchmark intervals: all merged intervals, those reaching 1 kb, the manufactured subset of the latter, and those found by the 30x 2-of-3 consensus call set.
-  An interval is manufactured when the longest benchmark record within it is itself shorter than 1 kb, so that it clears the floor only through fusion.
-  (B) Percentage of benchmark intervals found by the same call set, with native and manufactured intervals scored separately.
-  (C) Departures from one-to-one matching, at a permissive 0.1 classification threshold.
-  The fixed 0.5 threshold was not used for this comparison because a query call cannot reach half of two benchmark intervals that do not themselves overlap.
-  (D) Precision, recall, and F1 for the 30x 2-of-3 consensus at the 0.5 threshold.
-  The dotted vertical line marks the 1 kb cap applied to padding in the joint parameter grid.
-  Panels C and D are drawn for the 2-of-3 consensus; the same profiles for all six 30x call sets, together with the benchmark size distribution across the sweep, are given in Supplemental Figure Benchmark Padding Profiles.
-]
-
-#v(0.8em)
-
-The truth set moves in two directions at once (Figure 4A).
-Counted over all sizes the merged benchmark shrinks, from 180,064 intervals unpadded to 164,065 at 1 kb of padding and 96,743 at 100 kb, as records are absorbed into their neighbors.
-Counted at or above the 1 kb floor it grows, from 23,193 intervals to 25,562 and then to 37,626 across the same range.
-The second movement is the consequential one, since it is the intervals that clear the floor which form the recall denominator, and the growth is not a discovery of additional variants.
-It is runs of sub-kilobase records fused into single intervals long enough to clear the 1 kb floor.
-
-Those intervals can be counted directly.
-An interval was labeled manufactured when the longest benchmark record inside it is itself shorter than 1 kb, so that the interval exists in the truth set only because padding joined the run.
-Manufactured intervals are 413 of the 23,193 intervals in the unpadded truth set (1.8%), 3,084 of 25,562 at 1 kb of padding (12.1%), and 19,716 of 37,626 at 100 kb (52.4%).
-They are also almost never recovered.
-At 1 kb of padding the 30x 2-of-3 consensus finds 19.4% of the native intervals and 0.13% of the manufactured ones, a separation of more than two orders of magnitude that holds across the whole sweep (Figure 4B).
-Padding therefore adds to the recall denominator a population that is by construction outside the resolution of every caller in this study.
-
-The effect on the metrics follows from that arithmetic alone (Figure 4D).
-Between zero padding and the 1 kb cap, the number of benchmark intervals the 2-of-3 consensus recovers rises from 4,344 to 4,360, an increase of 0.4%, while the denominator rises from 23,193 to 25,562, an increase of 10.2%.
-Recall falls from 0.187 to 0.171 and F1 from 0.310 to 0.287 as a result, with no change in detection behind either.
-Recall and F1 sit at their maxima at the bottom of the range for all six 30x call sets and decline monotonically above roughly 100 bp of padding (Supplemental Figure Benchmark Padding Profiles).
-
-Precision behaves differently, and it is the one place in the sweep where padding does what it is intended to do.
-It improves slightly over the first two kilobases, reaching 0.902 at 1,823 bp of padding against 0.898 unpadded for the 2-of-3 consensus, because fusing benchmark fragments into single intervals converts a small number of boundary near-misses into matches.
-The maxima for the other five call sets fall between 290 bp and 2,154 bp of padding, so the effect is real and consistently located, but it is worth less than one percentage point of precision.
-Above a few kilobases precision falls with everything else, reaching 0.485 at 100 kb.
-
-The matching itself is unaffected throughout.
-At the 0.5 classification threshold used in this study, no query call matched more than one benchmark interval and no benchmark interval was split across more than one query call at any padding in the sweep, as the geometry of the threshold requires.
-The matching is therefore strictly one-to-one over the entire range, and none of the movement above is an artifact of a single call being credited against several intervals at once.
-Structure appears only in the permissive regime, and there it reverses direction (Figure 4C).
-At a 0.1 threshold the number of query calls spanning more than one benchmark interval falls from 42 to none as fragments fuse into single partners, while the number of benchmark intervals split across more than one query call rises from 17 to a maximum of 41, both against totals of between 3,130 and 4,535 matched pairs.
-
-Padding was therefore set to zero rather than capped.
-There is no interior optimum available to select: recall and F1 are maximal at the bottom of the range, and the sub-percentage-point gain in precision available at a kilobase is bought with a 1.7 percentage point loss of recall.
-Zero padding is not the same as disabling the operation, since it still bridges intervals that touch exactly; that difference amounts to 67 intervals out of 180,131, and it is retained because two benchmark records abutting at a shared coordinate describe one variant rather than two.
-Padding is nonetheless carried through the joint parameter grid over \[0, 1 kb\], so that its interaction with the other three parameters is measured rather than assumed.
-
-=== Size Floor
-
-With padding fixed at zero, the merged benchmark holds 180,064 intervals across the thirteen samples, of which only 12.9% reach 1 kb and 2.7% reach 10 kb.
-The preceding subsection took the 1 kb floor as given in order to isolate the effect of padding; this one asks whether that value is the right one.
-The six 30x query call sets are between 7 and 75 times smaller than the benchmark and, because every caller was run at a 1 kb bin size, hold almost nothing below that width (Figure 5).
-Scoring them against the benchmark without a size restriction therefore primarily measures the mismatch in resolution between the benchmark and the callers rather than an effect of sequencing depth, which is what this study set out to isolate.
-We swept the floor symmetrically over both sides and examined how the comparison behaves as it rises (Figure 5).
-
-#figure(
-  image("/results/size_floor/detectable_size_domain_pub.png", width: 100%)
-)
-
-#cap("Figure 5:")[
-  Effect of a size floor applied symmetrically to 30x WGS-derived query call sets and the merged benchmark call set, swept over \[1 bp, 100 kb\] at 80 logarithmically spaced points.
-  (A) Number of intervals surviving the floor in each call set, with the merged benchmark as a dashed black line.
-  (B) Recall, with the maximum attainable recall (query calls divided by truth intervals, capped at one) as a dashed line of the same color.
-  (C) Precision.
-  (D) F1, with each call set's maximum marked.
-  The shaded band marks 1--5 kb, spanning every F1 maximum; the dotted vertical line marks the 1 kb floor adopted for all subsequent analyses.
-  In panels C and D, each curve is drawn only while the call set behind it retains at least 100 intervals, since precision estimated from a few dozen calls is not comparable with precision estimated from thousands.
-  Duplications are 17.3% of the merged benchmark over all sizes and 27.8% above 1 kb, so the curves describe both CNV types.
-]
-
-#v(0.8em)
-
-Three features of this sweep together identify the usable domain.
-
-First, the benchmark loses intervals far faster than any query call set.
-At the bottom of the range the truth set outnumbers the largest query set more than sevenfold, but it falls below the 1-of-3 consensus set above a 943 bp floor and below CNVpytor above 1,954 bp, while the other four call sets remain smaller than the truth set throughout the sweep (Figure 5A).
-Above those points the comparison has inverted for the two largest sets: they report more CNVs than the benchmark contains, and their precision is bounded by the size of the truth set rather than by the accuracy of the calls.
-
-Second, recall is constrained by a ceiling that is a property of the two call set sizes rather than of detection (Figure 5B).
-At an unrestricted floor (size floor = 0 bp) the maximum attainable recall is 0.134 for the 1-of-3 set and 0.013 for the 3-of-3 set, so even a caller that matched a distinct benchmark interval with every single one of its calls could not exceed those values.
-Raising the floor lifts the ceiling for every call set, but it does so unevenly: the 1-of-3 and CNVpytor sets saturate at 1.0 above floors of 943 bp and 1,954 bp respectively, while the other four never do, with maxima of 0.60 for Delly, 0.38 for GATK-gCNV, 0.31 for the 2-of-3 set, and 0.18 for the 3-of-3 set.
-Recall is therefore interpretable as a detection measurement only below the point at which a given call set saturates.
-
-Third, precision is flat from 1 bp to approximately 1 kb for every call set and declines above it (Figure 5C).
-The flat region is the direct consequence of the bin size: over that range the floor removes benchmark intervals almost exclusively, because the callers had produced essentially nothing there to remove, so the query sets and their precision are unchanged while the truth set falls from 180,064 intervals to 23,193.
-Above 1 kb the floor begins to remove query calls as well, and precision falls for every set, most steeply for Delly (0.642 to 0.208 between the unrestricted case and a 100 kb floor), by about half for CNVpytor and the 1-of-3 consensus (0.419 to 0.217 and 0.399 to 0.183), and most gradually for GATK-gCNV, which is the most size-stable of the callers (0.603 to 0.418 over the same range, the upper end of which lies beyond the 64.6 kb floor at which its curve is cut for low counts).
-
-Taken together, these place the usable domain immediately above the bin size.
-We fixed the floor at 1 kb, chosen on the physical grounds that no caller in this study can resolve a CNV narrower than its bin.
-The sweep supports that choice: F1 reaches its maximum between 1,689 bp and 3,027 bp for all six call sets, with the 1-of-3 consensus highest at 0.418 and the 2-of-3 consensus at 0.395 (Figure 5D).
-A 1 kb floor therefore sits just below the empirical optimum for every call set simultaneously.
-
-This floor is applied to every call set and to the benchmark for all analyses that follow, at all four coverages, and it is the value at which the floor is held while the two overlap thresholds are profiled below.
-It was selected using 30x data only, which is the arm with the finest resolution and therefore the most permissive: a floor set there admits calls at 2x that fall below the resolution attainable at that depth, biasing the comparison against the low-coverage hypothesis rather than in its favor.
-
-=== Consensus reciprocal overlap threshold
-A consensus component is a union of all pairwise overlaps that clear the reciprocal overlap threshold.
-We swept the threshold from 0.05 to 0.95 in steps of 0.05 (Figure 6).
-
-#figure(
-  image("/results/parameterization/consensus_overlap.png", width: 100%)
-)
-
-#cap("Figure 6:")[
-  Effect of the query consensus reciprocal-overlap threshold on the three 30x consensus call sets, swept from 0.05 to 0.95.
-  The benchmark is held at zero padding, the size floor at 1 kb on both sides, and the classification threshold at 0.5.
-  (A) Consensus calls surviving the 1 kb floor.
-  (B) Precision.
-  (C) Recall, whose denominator is the same 23,193 benchmark intervals at every point.
-  (D) F1.
-  The dotted vertical line marks the adopted value of 0.5.
-]
-
-#v(0.8em)
-
-The behavior for the number of calls greater than 1kb in length differs across consensus stringencies (Figure 6A).
-Raising the threshold splits components between callers that fail to meet threshold requirements. Each split adds a call to lower stringency sets while removing the agreement that contributed to the counts in the levels above it.
-Between 0.05 and 0.95 the 1-of-3 set grows from 21,847 to 28,413 calls above the floor, while the 2-of-3 set falls from 5,623 to 2,369 and the 3-of-3 set from 2,666 to 369.
-
-Taking the ratio of a component's span to the span of the longest single call inside it, the median is 1.00 at every threshold and for every level, the 95th percentile never exceeds 1.16, and the largest ratio anywhere in the sweep is 2.83.
-Components at the permissive end are therefore sets of calls that agree, not loci collapsed into intervals no caller reported.
-
-What the threshold does instead is trade the two sides of the comparison against each other (Figure 6B, C).
-For the 2-of-3 consensus, precision rises from 0.827 to 0.936 across the range while recall falls from 0.201 to 0.096.
-For the 3-of-3 consensus precision is already near its ceiling and barely moves, from 0.945 to a maximum of 0.983 at 0.65, while recall falls from 0.109 to 0.015.
-The 1-of-3 set is the exception: its recall is roughly flat, 0.385 to 0.399, throughout; its precision falls to a minimum of 0.391 at 0.45 before rising to 0.470.
-
-Over the lower half of the range those two movements nearly cancel (Figure 6D).
-Between 0.05 and 0.50 the F1 of the 2-of-3 consensus varies by 0.013, from 0.323 at 0.05 to 0.310 at 0.50, while its precision gains 7.1 percentage points.
-The F1 maxima themselves are shallow and disagree between levels, falling at 0.05 for the 2-of-3 and 3-of-3 sets and at the top of the range for the 1-of-3 set.
-
-We chose to adopt a threshold of 0.5 for subsequent analyses.
-It is the conventional reciprocal criterion, it is the smallest threshold at which neither member of a merged pair can be more than twice the size of the other, and it costs the 2-of-3 consensus 4.0% of its attainable F1 while gaining 7.1 of the 10.9 percentage points of precision available across the whole range.
-
-=== Classification reciprocal overlap threshold
-
-Unlike the other three parameters this one changes neither call set, and instead strictly influences binary classification calculations.
-We swept the classification reciprocal overlap threshold, which defines the overlap required to register matches between query and truth sets as valid, from 0 to 0.99 in steps of 0.01 (Figure 7).
-
-#figure(
-  image("/results/parameterization/classification_overlap.png", width: 100%)
-)
-
-#cap("Figure 7:")[
-  Effect of the classification reciprocal-overlap threshold, swept from 0 to 0.99.
-  The benchmark is held at zero padding, the size floor at 1 kb on both sides, and the consensus threshold at 0.5.
-  (A) Precision, recall, and F1 for the 30x 2-of-3 consensus.
-  (B) Query calls credited against more than one benchmark interval, and (C) benchmark intervals credited to more than one query call, for all six 30x call sets; both axes are symmetric-log so that zero has a position.
-  (D) F1 for the same six call sets.
-  Panels B--D share the legend in D.
-  The dotted vertical line marks the adopted value of 0.5.
-]
-
-#v(0.8em)
-
-All three metrics decline monotonically and the parameter has no interior optimum (Figure 7A).
-For the 2-of-3 consensus, precision falls from 0.934 at a threshold of zero to 0.898 at 0.5 and 0.440 at 0.9, and F1 from 0.326 to 0.310 to 0.152.
-The choice is therefore not between values that perform differently but between definitions of what a match is required to mean, and the informative quantity is the match topology rather than the metrics.
-
-At a threshold of zero a single shared base pair is a match, and one query call is credited against as many as 15 benchmark intervals, depending on the call set.
-The number of query calls with more than one partner falls to zero between 0.43 and 0.46 depending on the call set, ahead of the 0.5 at which the geometry requires one-to-one matching (Figure 7B).
-The merged benchmark is internally disjoint within each sample, chromosome, and variant type, so no query call can cover half of two of its intervals; the query sets carry no such guarantee, because components built at a reciprocal overlap of 0.5 may still overlap one another below that threshold.
-The 1-of-3 consensus is the case in which that matters: it still splits 127 benchmark intervals across two query calls at a threshold of 0.5, and the count reaches zero only at 0.70 (Figure 7C).
-For the other five call sets the matching is strictly one-to-one at 0.5, and the query-side and truth-side true-positive counts coincide exactly; for the 2-of-3 consensus they are both 4,344 at 0.5.
-
-According to F1 scores, the 1-of-3 consensus is the highest-scoring set at every threshold up to 0.82 and CNVpytor from 0.83 to 0.98, above which all six sets lie within 0.02 of one another; the 3-of-3 set is the lowest until 0.91 (Figure 7D).
-We adopted 0.5, the conventional reciprocal-overlap criterion, which is also the smallest threshold at which no query call can be credited against two benchmark intervals at once.
-
-== Variance-based sensitivity analysis and Pareto front
-
-The preceding subsections move one parameter with the other three held fixed.
-To ask whether that reading survives elsewhere in the parameter field, all four were varied jointly over the full factorial grid of 22,743 settings and evaluated for each of the three consensus call sets at 30x.
-The 2-of-3 consensus is reported here; the other two levels are given in Supplementary Table X.
-
-#figure(
-  image("/results/parameterization/sensitivity.png", width: 100%)
-)
-
-#cap("Figure 8:")[
-  Joint behavior of the four parameters over the full factorial grid, for the 30x 2-of-3 consensus call set.
-  (A) Sobol' first-order indices (solid) and total-order indices (pale extension) for precision, recall and F1, with the variance carried only by interactions at the right.
-  (B) Marginal F1 of each parameter under the additive model, against position within that parameter's swept range; the dotted line is the grand mean.
-  (C) Precision and recall at every setting in the grid (gray), the Pareto front (black), the adopted setting (star), and the setting attaining the highest F1 (diamond).
-  (D) The same plane with the classification threshold held at 0.5, colored by size floor.
-]
-
-#v(0.8em)
-
-The four parameters act very nearly independently (Figure 8A).
-Their first-order indices sum to 0.94 for precision, 0.94 for recall and 0.95 for F1, so an additive model, a grand mean plus one curve per parameter, reproduces the joint field to within 6% of its variance.
-The largest single interaction anywhere is between the size floor and the classification threshold, at 2.9% of the variance in F1 and 3.9% in precision.
-The one-at-a-time profiles of the preceding subsections are therefore not artifacts of where the remaining parameters were held.
-
-The variance is not shared evenly (Figure 8A, B).
-The size floor carries 76.6% of the variance in F1 and 76.6% in recall, and the classification threshold carries 81.5% of the variance in precision.
-The benchmark padding accounts for no more than 0.1% of the variance in any of the three metrics.
-The same ordering holds at the 1-of-3 and 3-of-3 consensus levels, with one shift: the consensus threshold's share of the variance in F1 rises from 0.2% for the 1-of-3 set to 15.1% for the 3-of-3 set, which follows the intuition that for higher stringencies, changes in the threshold more readily remove calls.
-
-These shares per parameter describe the region examined, and are influenced by the ranges we evaluate.
-Recomputed over the deliberately over-wide grid, in which the padding and the floor extend to $10^6$ bp, the padding's share of the variance in F1 rises from below 0.1% to 34.2% and the share carried by interactions rises from 4.9% to 25.5% (Supplementary Table X).
-The padding's apparent inertness and the additivity of the field are properties of the ranges used, and are physically constrained around the values that we use for the subsequence analyses.
-
-Across the grid, precision exceeds recall at every setting, and F1 is close to a monotone function of recall alone.
-The Pareto front comprises 79 of the 22,743 settings, spanning recall from 0.048 to 0.301 and precision from 0.831 to 0.955 (Figure 8C).
-Every setting on the front uses a classification threshold of 0.05, the loosest value tested in the grid.
-The setting attaining the highest F1 of 0.442 uses zero padding, a 2 kb floor, a consensus threshold of 0.05, and a classification threshold of 0.05.
-Both metrics decline monotonically in the classification threshold, so every value above the smallest is dominated; what this records is that a looser definition of a match credits more calls, not that the pipeline performs better under it.
-The front is read with the crediting rule fixed for that reason.
-
-Held at a classification threshold of 0.5, the front comprises 113 of the 1,197 remaining settings, and the adopted setting is one of them: no setting in the grid reaches both a higher precision and a higher recall (Figure 8D).
-With the floor also held at the 1 kb the caller resolution fixes, the front comprises 61 of the 171 settings that remain and the adopted setting is again on it.
-That front is traced by the consensus threshold, which takes every one of its nineteen values along it; the padding takes five of its nine, and moving from zero padding to 200 bp at the adopted consensus threshold exchanges 0.002 of recall for 0.002 of precision.
-The choice of an operating point on this front is therefore a choice of consensus stringency, and the rate at which the two metrics exchange turns at the adopted value: raising the threshold from 0.05 to 0.50 gains 7.1 percentage points of precision for 1.3 of recall, while raising it from 0.50 to 0.95 gains a further 3.8 for 9.2.
-
 == Adopted Parameters <r_adopted_parameters>
 
-Each of the four parameters was bounded on geometric grounds and then measured across that bound, jointly as well as one at a time.
+Four user-defined parameters govern the comparison: the padding applied to benchmark records before the three benchmark sets are merged, the size floor below which no event is scored on either side, the reciprocal-overlap threshold at which calls from different callers are merged into a consensus call, and the reciprocal-overlap threshold at which a query call is credited against a benchmark interval.
+Each was bounded on physical grounds (Methods), profiled across its range with the other three held fixed (Supplementary Note S1), and varied jointly with the others over a full factorial grid (Supplementary Note S2).
+The joint grid showed the four to act very nearly independently, with first-order Sobol' indices summing to 0.94--0.95 for each metric, so the one-at-a-time profiles describe a majority of the behavior of the pipeline; the size floor carries most of the variance in recall and F1, the classification threshold most of the variance in precision, and the benchmark padding almost none.
 The values carried forward are the following, and all four are held at them for every call set and every coverage in the remainder of this study.
 
-- *Benchmark padding, 0 bp.* The padding accounts for no more than 0.1% of the variance in any of the three metrics across its admissible range, so no value within that range is preferred on performance grounds. Zero is adopted because it is the only value at which the merged benchmark remains internally disjoint within a sample, chromosome, and variant type, and that disjointness is what the one-to-one crediting guarantee at a classification threshold of 0.5 rests on.
+- *Benchmark padding, 0 bp.* Padding fuses runs of sub-kilobase benchmark records into intervals long enough to clear the size floor, adding to the recall denominator a population that the callers in this study almost never recover, and it accounts for no more than 0.1% of the variance in any of the three metrics across its admissible range. Zero is adopted because it is the only value at which the merged benchmark remains internally disjoint within a sample, chromosome, and variant type, and that disjointness is what the one-to-one crediting guarantee at a classification threshold of 0.5 rests on.
 - *Size floor, 1 kb, applied symmetrically to the query and the benchmark.* No caller in this study can resolve a CNV narrower than its 1 kb bin. Below that width the comparison measures the resolution mismatch between the benchmark and the callers rather than an effect of sequencing depth, and above it the floor begins to remove query calls and precision falls for every call set. The value also sits immediately below the F1 maximum of all six 30x call sets, which fall between 1,689 bp and 3,027 bp.
-- *Consensus reciprocal overlap, 0.5.* This is the conventional reciprocal criterion #c[Krusche 2019] #c[English 2022], and the smallest threshold at which neither member of a merged pair can exceed twice the size of the other. It costs the 2-of-3 consensus 4.0% of its attainable F1 and gains 7.1 of the 10.9 percentage points of precision available across the range.
-- *Classification reciprocal overlap, 0.5.* This is the same criterion applied to the second comparison, and is the smallest threshold at which no query call can be credited against two benchmark intervals at once, so that a true positive count is a count of distinct events on both sides.
+- *Consensus reciprocal overlap, 0.5.* This is the conventional reciprocal criterion #c[Krusche 2019] #c[English 2022], and the smallest threshold at which neither member of a merged pair can exceed twice the size of the other. It costs the 2-of-3 consensus 4.0% of its attainable F1 and gains 7.1 of the 10.9 percentage points of precision available across the range, and at every threshold examined a consensus call rarely extends beyond the longest call it contains.
+- *Classification reciprocal overlap, 0.5.* Precision, recall, and F1 all decline monotonically with this threshold, so it defines what a match is required to mean rather than tuning performance. The value adopted is the same criterion applied to the second comparison, and is the smallest threshold at which no query call can be credited against two benchmark intervals at once, so that a true positive count is a count of distinct events on both sides.
 
+With the classification threshold fixed at 0.5, the adopted setting lies on the Pareto front of precision against recall: no other combination in the grid attains both a higher precision and a higher recall (Supplementary Note S2).
 The two overlap thresholds are numerically equal but independent: the first decides which calls from different callers become one consensus call, the second decides which consensus calls are credited against the benchmark.
 Under these values the merged benchmark holds 23,193 intervals above the floor and the 30x 2-of-3 consensus call set holds 4,836 calls.
 Recall is reported against the whole merged benchmark throughout, so it carries a ceiling equal to the ratio of the two set sizes, which is 0.209 for the 30x 2-of-3 set; that ceiling is stated wherever call sets of different sizes are compared.
@@ -1050,7 +778,7 @@ No upper bound is imposed.
   image("/results/size_distribution/size_distributions.png", width: 100%)
 )
 
-#cap("Figure 9:")[
+#cap("Figure 4:")[
   Size densities of the CNV call sets, estimated by Gaussian kernel density on $log_10$ size and drawn on a log-10 axis.
   (A) The six 30x call sets, the SNP microarray call set, and the merged benchmark.
   Consensus call sets are drawn solid, individual callers dashed, the SNP microarray dotted, and the merged benchmark in black dash-dot, as in every figure that draws these sets together.
@@ -1067,7 +795,7 @@ GATK-gCNV is bin-quantized in the same way but reaches a single bin, so 24.9% of
 Delly is the exception: only 0.03% of its calls land on a bin boundary and its shortest is 160 bp, since its breakpoints come from split reads and read pairs rather than strictly from a depth profile #c[Rausch 2012].
 The 1 kb floor therefore removes nothing from CNVpytor or GATK-gCNV and 3.5% of Delly's calls.
 
-Consensus construction narrows the distribution (Figure 9A).
+Consensus construction narrows the distribution (Figure 4A).
 At 30x the three consensus levels have medians of 6,000, 5,343 and 6,186 bp , and the MAD falls from 4,837 to 2,343 and 2,186 bp as stringency increases (Table 5).
 Calls between 1 and 2 kb make up 12.8% of the 1-of-3 set, 2.6% of the 2-of-3 set and none of the 3-of-3 set.
 Since calls of that width have to be matched at a reciprocal overlap of 0.5 to survive, and CNVpytor, which is in every 3-of-3 component, reports nothing below 2 kb, the minimum reported size is 2kb for the 3-of-3 set.
@@ -1080,7 +808,7 @@ The two differ in class as well, at 45.9% duplications in the SNP Array against 
 
 Decreasing coverage moves the distributions to the right.
 Delly's median slightly rises from 4,327 bp at 30x to 5,316 bp at 2x, while CNVpytor's rises from 14,000 to 51,000 bp (Supplemental Figure Per Caller Size Distributions).
-Consensus calls are built out of the callers' own intervals, so the consensus sets widen with them (Figure 9B--D): the 2-of-3 median rises from 5,343 bp at 30x to 11,771, 21,000 and 33,000 bp at 6x, 4x and 2x, and the fraction of that set above 10 kb rises from 23.1% to 85.0%.
+Consensus calls are built out of the callers' own intervals, so the consensus sets widen with them (Figure 4B--D): the 2-of-3 median rises from 5,343 bp at 30x to 11,771, 21,000 and 33,000 bp at 6x, 4x and 2x, and the fraction of that set above 10 kb rises from 23.1% to 85.0%.
 Counts fall across the same range for the 2-of-3 and 3-of-3 sets, from 4,836 to 721 and from 2,400 to 177, but not for every set: GATK-gCNV reports 8,216 calls at 30x and 10,553 at 2x, carrying the 1-of-3 consensus back up from 14,335 at 4x to 18,907 at 2x.
 
 The class composition drifts with depth as well.
@@ -1143,7 +871,7 @@ Recall carries a ceiling equal to the ratio of the call set size to the 23,193 b
 F1 is highest for the 1-of-3 set, at 0.394 against 0.310 for the 2-of-3 set and 0.183 for the 3-of-3 set, and the difference is carried by recall.
 The 1-of-3 set reaches its recall of 0.397 by holding 4.9 times as many calls as the 2-of-3 set, 14,532 of which match nothing in the benchmark against 492 in the latter.
 
-Splitting the 1-of-3 set by the number of callers that reported each component locates those calls (Figure 10B).
+Splitting the 1-of-3 set by the number of callers that reported each component locates those calls (Figure 5B).
 The 19,040 components carried by a single caller have a precision of 0.263, the 2,436 carried by exactly two have 0.824, and the 2,400 carried by all three have 0.973.
 The single-caller set holds 14,040 of the 14,532 unmatched calls, and it is this set that the single-population agreement model could not account for, so its members are better described as caller-specific artifacts than as events beyond the reach of the other two callers.
 
@@ -1159,7 +887,7 @@ Overall, deletion CNVs yield significantly higher performance compared to the du
   image("/results/consensus_levels/consensus_levels.png", width: 100%)
 )
 
-#cap("Figure 10:")[
+#cap("Figure 5:")[
   Performance of the 30x call sets and the SNP array against the merged benchmark at the adopted parameters.
   (A) Precision against recall, over gray F1 iso-contours.
   Each point sits on a bar running to its recall ceiling, the largest recall a call set of that size could attain.
@@ -1170,11 +898,11 @@ Overall, deletion CNVs yield significantly higher performance compared to the du
 
 #v(0.8em)
 
-Deletion F1 peaks between 8.9 and 10.8 kb for every sequence-derived call set (Figure 10C).
+Deletion F1 peaks between 8.9 and 10.8 kb for every sequence-derived call set (Figure 5C).
 The 2-of-3 set has the highest peak of the six, 0.584 near 10.2 kb, against 0.576 near 9.2 kb for the 1-of-3 set; it leads the 1-of-3 set above 7.6 kb, by up to 0.089 at 133 kb, and trails it below 4.8 kb, by 0.198 at 1.5 kb.
 The 3-of-3 set peaks at 0.469 and is the lowest sequence-derived curve throughout.
 
-Duplications separate the callers rather than the consensus levels (Figure 10D).
+Duplications separate the callers rather than the consensus levels (Figure 5D).
 CNVpytor and the 1-of-3 set, which it dominates by count, rise to F1 of 0.544 and 0.533 near 130--135 kb, on recalls of 0.588 and 0.627 against precisions of 0.506 and 0.463; no other set exceeds 0.27 at any size, and GATK-gCNV, which peaks at 0.123, holds too few duplications above 37 kb to be drawn there.
 Requiring a second caller forfeits most of the duplication recall CNVpytor supplies: the 2-of-3 set peaks at 0.269, and the 3-of-3 set, with 115 duplication calls, is drawn only between 12 and 18 kb.
 
@@ -1241,7 +969,7 @@ The SNP array recovers more deletions than the 2x set, at a recall of 0.030 agai
   image("/results/coverage_performance/benchmark_recovery.png", width: 100%)
 )
 
-#cap("Figure 11:")[
+#cap("Figure 6:")[
   Recovery of the merged benchmark by the 2/3 consensus call sets across coverages and by the SNP array, at the adopted parameters.
   (A) UpSet plot of the benchmark intervals each call set recovered.
   Each bar counts the intervals recovered by exactly the combination of call sets marked beneath it, and the horizontal bars at left give each call set's total.
@@ -1252,12 +980,12 @@ The SNP array recovers more deletions than the 2x set, at a recall of 0.030 agai
 
 #v(0.8em)
 
-All five call sets were classified against the same 23,193 benchmark intervals, so the intervals each recovered can be crossed directly (Figure 11A).
+All five call sets were classified against the same 23,193 benchmark intervals, so the intervals each recovered can be crossed directly (Figure 6A).
 4,499 intervals, 19.4% of the benchmark, are recovered by at least one of the five.
 The coverage sets are close to nested: 95.4% of the intervals recovered at 6x are also recovered at 30x, 89.8% of those recovered at 4x are recovered at 6x, and 88.9% of those recovered at 2x are recovered at 4x.
 The four largest combinations follow this nesting, with 2,697 intervals recovered by the 30x set alone and 506, 311 and 234 as each successive coverage is added.
 
-The 30x set recovers 524 of the 574 benchmark intervals the array recovers, or 91.3%, along with 3,820 the array does not, leaving 50 intervals to the array alone (Figure 11B).
+The 30x set recovers 524 of the 574 benchmark intervals the array recovers, or 91.3%, along with 3,820 the array does not, leaving 50 intervals to the array alone (Figure 6B).
 The share of the array's recoveries the consensus set also holds falls to 51.6%, 41.1% and 25.3%, while the share of the consensus set's own recoveries that the array also holds rises from 12.1% to 32.2%.
 The array overtakes sequencing between 4x and 2x: the 2x set recovers 306 intervals the array does not against 429 recovered by the array alone, and 451 in total against the array's 574.
 
@@ -1265,7 +993,7 @@ The array overtakes sequencing between 4x and 2x: the 2x set recovers 306 interv
   image("/results/coverage_performance/coverage_size_metrics.png", width: 100%)
 )
 
-#cap("Figure 12:")[
+#cap("Figure 7:")[
   Precision, recall and F1 against CNV size for the 2/3 consensus call sets across coverages and the SNP array, at the adopted parameters, for deletions (A--C) and duplications (D--F), each scored against the benchmark intervals of that class.
   All six are smoothed in log-10 space over a bandwidth of 0.15 decades and drawn only where at least 20 calls contribute, which is why the lower-coverage curves do not extend to the size floor and why every curve ends between 180 kb and 420 kb, where the benchmark runs out of intervals.
   Consensus call sets are drawn solid and the SNP array dotted.
@@ -1273,14 +1001,14 @@ The array overtakes sequencing between 4x and 2x: the 2x set recovers 306 interv
 
 #v(0.8em)
 
-Deletion precision is independent of depth below 30 kb, running between 0.91 and 0.98 at all four coverages (Figure 12A), whereas duplication precision falls with depth at every size, from 0.872 at 30x to 0.838, 0.636 and 0.295 at 10 kb (Figure 12D).
-Deletion recall separates the coverages, and the separation narrows as CNVs get larger, from 0.403 at 30x against 0.011 at 2x at 5 kb to 0.227 against 0.149 at 50 kb (Figure 12B).
-Duplication recall does not exceed 0.1 at any coverage below 50 kb and rises above 100 kb, where duplications are the majority of the benchmark (Figure 2B), to 0.172 at 30x and 0.134 at 2x at 200 kb (Figure 12E).
-The deletion F1 peak moves right and down with depth, from 0.584 near 10.2 kb at 30x to 0.263 near 40.1 kb at 2x, and the four coverages converge above 100 kb, at 0.24--0.35 near 150 kb (Figure 12C); the duplication F1 peak sits above 100 kb at every coverage, at 0.317, 0.233, 0.234 and 0.220 (Figure 12F).
+Deletion precision is independent of depth below 30 kb, running between 0.91 and 0.98 at all four coverages (Figure 7A), whereas duplication precision falls with depth at every size, from 0.872 at 30x to 0.838, 0.636 and 0.295 at 10 kb (Figure 7D).
+Deletion recall separates the coverages, and the separation narrows as CNVs get larger, from 0.403 at 30x against 0.011 at 2x at 5 kb to 0.227 against 0.149 at 50 kb (Figure 7B).
+Duplication recall does not exceed 0.1 at any coverage below 50 kb and rises above 100 kb, where duplications are the majority of the benchmark (Figure 2B), to 0.172 at 30x and 0.134 at 2x at 200 kb (Figure 7E).
+The deletion F1 peak moves right and down with depth, from 0.584 near 10.2 kb at 30x to 0.263 near 40.1 kb at 2x, and the four coverages converge above 100 kb, at 0.24--0.35 near 150 kb (Figure 7C); the duplication F1 peak sits above 100 kb at every coverage, at 0.317, 0.233, 0.234 and 0.220 (Figure 7F).
 The 4x and 2x deletion sets hold too few calls below 2.2 and 3.9 kb for any of the three metrics to be estimated there, and the 6x and 4x duplication sets too few below 6.5 and 8.7 kb.
 
-The array's deletion F1 exceeds the 2x set's below 18 kb, at 0.152 against 0.097 at 10 kb, and falls below it above, at 0.195 against 0.256 at 50 kb, while its deletion precision above 10 kb runs 0.53--0.68 against 0.75--0.93 for the 2x set (Figure 12A, C).
-On duplications it falls below every coverage above 13 kb and peaks at an F1 of 0.077 (Figure 12F).
+The array's deletion F1 exceeds the 2x set's below 18 kb, at 0.152 against 0.097 at 10 kb, and falls below it above, at 0.195 against 0.256 at 50 kb, while its deletion precision above 10 kb runs 0.53--0.68 against 0.75--0.93 for the 2x set (Figure 7A, C).
+On duplications it falls below every coverage above 13 kb and peaks at an F1 of 0.077 (Figure 7F).
 Lowering coverage removes small CNVs from the call set rather than degrading the calls that survive: the 2x set's deletion precision is within 0.04 of the 30x set's, and its deletion recall deficit closes from 36-fold at 5 kb to 1.5-fold at 50 kb.
 
 = Discussion
@@ -1292,13 +1020,13 @@ The 6x, 4x, and 2x call sets were not generated from independent sequencing runs
 The 30x call set is therefore the theoretical ceiling of the same pipeline rather than an external reference point: a difference between two coverages is attributable to depth alone, whereas a difference between a sequencing call set and the array separates what is limited by coverage from what is limited by the method.
 
 Low-pass WGS has been shown to support cost-effective CNV calling in several settings #c[Kucharík 2021] #c[Mazzonetto 2024] #c[Mazzonetto 2024 (2)], and our results place the 2x -- 6x coverages delivered by a BGE run against a SNP array on the same individuals, with a 30x ceiling derived from the same libraries.
-Call sets at 4x coverage and above exceeded the SNP array on both precision and recall, overall and within each variant class (Table 7), and at nearly every CNV size at which both could be estimated (Figure 12).
+Call sets at 4x coverage and above exceeded the SNP array on both precision and recall, overall and within each variant class (Table 7), and at nearly every CNV size at which both could be estimated (Figure 7).
 At 2x, the lowest coverage evaluated, the sequencing call set retained the higher precision, while the array recovered more deletions and fewer duplications, and its deletion F1 exceeded the 2x set's for CNVs below about 18 kb.
 Recall rose steeply with depth, most of all for deletions, where it rose twelve-fold from 2x to 30x.
-The gain came from the small end of the size range: lowering coverage removed small CNVs from the call set rather than degrading the calls that survived, as deletion precision at 2x stayed close to that at 30x while the deletion F1 peak moved to larger sizes (Figure 12), so the 2x -- 6x call sets performed best in the mid-to-large regime that SNP arrays are typically used to target.
+The gain came from the small end of the size range: lowering coverage removed small CNVs from the call set rather than degrading the calls that survived, as deletion precision at 2x stayed close to that at 30x while the deletion F1 peak moved to larger sizes (Figure 7), so the 2x -- 6x call sets performed best in the mid-to-large regime that SNP arrays are typically used to target.
 
 The intervals recovered by sequencing and by the array only partly coincide.
-The 30x set recovered nearly all of the benchmark intervals the array recovered, but that share fell steadily with depth, and between 4x and 2x the array came to recover more intervals that the sequencing set missed than the reverse (Figure 11B).
+The 30x set recovered nearly all of the benchmark intervals the array recovered, but that share fell steadily with depth, and between 4x and 2x the array came to recover more intervals that the sequencing set missed than the reverse (Figure 6B).
 At 4x and 6x, sequencing therefore recovers more CNVs in total while recovering only about half of the array's or fewer, so the case for replacement rests on total yield and precision rather than on reproducing what an array would have reported.
 
 The precision gap is the largest difference in the comparison and the one with the most direct consequence for use.
@@ -1331,7 +1059,7 @@ Duplications are a known hard class to detect in short-read CNV/SV analysis and 
 Independent lcWGS benchmarking echoes this: amplification calls diverged most across callers and were prone to over-detection in sparse data, whereas deletion calls remained comparatively stable #c[Wang 2025].
 Our results agree with this at every coverage.
 Duplications were detected with lower precision and much lower recall than deletions, and duplication precision fell with depth while deletion precision held steady (Table 7); the array's duplication calls were only 10% precise.
-The two classes also peak in different size regimes, deletions in the tens of kilobases and duplications above 100 kb (Figure 12).
+The two classes also peak in different size regimes, deletions in the tens of kilobases and duplications above 100 kb (Figure 7).
 Duplication detection also responds far less to depth than deletion detection does: from 30x to 2x, the number of benchmark duplications recovered fell three-fold, against twelve-fold for deletions (Table 7).
 The number of duplication calls barely changed over the same range, because calls without benchmark support rose as the supported ones fell, which matches the over-detection in sparse data that #c[Wang 2025] reported.
 This is in line with our expectation that the detection of duplications from short-read data is limited by the data type rather than by its depth, and it is why every performance statistic is reported by class.
@@ -1339,10 +1067,10 @@ This is in line with our expectation that the detection of duplications from sho
 Consensus components were collapsed by union, so a merged call spans the minimum start and the maximum end position across its member calls.
 Work from other SV analysis toolkits such as Truvari has demonstrated that slight differences in the implementation details of merging and matching SV calls propagate into substantial differences in results #c[English 2022], so this policy warrants being stated explicitly.
 The concern with a union is that it may aggregate adjacent but distinct CNVs where callers disagree on breakpoint position, or where one caller preferentially reports larger intervals than the others, in which case a consensus call would record co-location rather than agreement about an event.
-Across every consensus level and every reciprocal overlap threshold we examined, the median ratio of a component's span to the span of the longest call inside it was 1.00, the 95th percentile never exceeded 1.16, and the largest ratio anywhere in the sweep was 2.83.
+Across every consensus level and every reciprocal overlap threshold we examined, the median ratio of a component's span to the span of the longest call inside it was 1.00, the 95th percentile never exceeded 1.16, and the largest ratio anywhere in the sweep was 2.83 (Supplementary Note S1).
 Therefore, we conclude that the consensus calls reflect agreement between callers about one event rather than adjacent calls chained together by the merging algorithm.
 A union also retains whichever member call reaches furthest at each end, and which caller that is follows from how each places its breakpoints.
-CNVpytor and GATK-gCNV share a 1 kb bin grid and frequently report identical coordinates, whereas Delly resolves breakpoints from split reads and read pairs and almost never coincides with either, so it is Delly that most often decides the boundary of a consensus deletion, while CNVpytor more often decides that of a duplication (Supplementary Note S1).
+CNVpytor and GATK-gCNV share a 1 kb bin grid and frequently report identical coordinates, whereas Delly resolves breakpoints from split reads and read pairs and almost never coincides with either, so it is Delly that most often decides the boundary of a consensus deletion, while CNVpytor more often decides that of a duplication (Supplementary Note S3).
 In most consensus deletions and half of consensus duplications, at least one end of the call is a breakpoint that only Delly reported.
 Had we kept only the region where the callers overlap, that end would instead have been set by one of the read-depth callers, at a 1 kb bin boundary.
 
@@ -1353,7 +1081,7 @@ Of the 23,193 benchmark intervals above the size floor, 31.8% lie between 1 and 
 Recall was nonetheless scored against the whole benchmark, so the recall values reported here are low in absolute terms and bounded by the size of each call set, at a ceiling of 0.209 for the 30x 2/3 consensus call set.
 Some calls scored as false positives may likewise correspond to real variants absent from the benchmark rather than true errors.
 The 50% reciprocal overlap required for a match may also have rejected genuine pairs whose breakpoints disagree between datasets.
-Lowering it raises precision and recall together (Figure 7), but only by crediting calls that share less of their extent with a benchmark interval, and at 50% the matching is one-to-one for every call set but the 1/3 consensus, so each true positive corresponds to exactly one benchmark interval.
+Lowering it raises precision and recall together (Supplementary Note S1), but only by crediting calls that share less of their extent with a benchmark interval, and at 50% the matching is one-to-one for every call set but the 1/3 consensus, so each true positive corresponds to exactly one benchmark interval.
 Because every call set was scored against the same benchmark intervals in the same thirteen individuals, these limitations bear on the absolute values of precision and recall more than on the comparisons between call sets.
 
 The benchmark and the sequencing call sets are not fully independent: the 1000 Genomes high-coverage SV call set, one of the three benchmark sources, was called from the same 30x alignments as our sequencing call sets (Methods), which may favour the sequencing call sets over the SNP array.
@@ -1374,7 +1102,7 @@ Together with a larger cohort and targeted validation of calls, these additions 
 
 In conclusion, we compared CNV detection at the coverages a BGE run delivers with detection from a SNP microarray in the same individuals, against a 30x ceiling derived from the same sequencing libraries, and scored every call set against a merged benchmark separately for deletions and duplications.
 Building on prior CNV benchmarking frameworks #c[Masood 2024] #c[Wang 2025], the evaluation builds the comparison between call sets once and filters it at each parameter setting, so that the influence of every parameter on the results could be measured rather than assumed.
-Requiring agreement between callers with independent sources of evidence removed most unsupported calls, and the size floor and the classification threshold, rather than the merging parameters, determined most of the variation in performance.
+Above all, requiring agreement between callers that draw on independent sources of evidence removed nearly all of the calls without benchmark support for the loss of about half of those with it, a trade that makes a multi-caller consensus the natural basis for any low-pass CNV call set intended for downstream analysis or validation.
 The consensus calling and evaluation framework is available as the open-source Python package consensuscnv (#link("https://github.com/limenode/consensuscnv")), and can be applied directly to real BGE data and to larger cohorts.
 
 = Supplementals

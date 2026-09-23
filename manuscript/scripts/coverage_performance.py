@@ -4,9 +4,9 @@ Where used
 ----------
 Results -> "Performance of 2-of-3 Consensus Call Sets across Coverages":
     Table 7   binary classification of the four coverages and the SNP array
-    Figure 11  benchmark recovery as an UpSet plot, and each coverage's
+    Figure 6  benchmark recovery as an UpSet plot, and each coverage's
                recoveries crossed with the array's
-    Figure 12  precision, recall and F1 against CNV size across coverages,
+    Figure 7  precision, recall and F1 against CNV size across coverages,
                for deletions and for duplications
     every number quoted in that section
 
@@ -80,13 +80,13 @@ CLASSIFY_THRESHOLD = 0.5
 CONSENSUS_LEVEL = 2
 
 # Blues ramp for the ordinal coverages and mid grey for the array, the same
-# assignment Figure 9 already uses.
+# assignment Figure 4 already uses.
 COLORS = {"30x": "#08519C", "6x": "#3182BD", "4x": "#6BAED6", "2x": "#BDD7E7",
           ARRAY: "#767676"}
 # The light end of the ramp disappears against white as a 1 pt line, so the
 # curves get a slightly darker variant while the bars keep the ramp.
 LINE_COLORS = {**COLORS, "2x": "#9ECAE1"}
-# Solid for the consensus sets, dotted for the array control, as in Figure 10.
+# Solid for the consensus sets, dotted for the array control, as in Figure 5.
 LINE_STYLES = {
     "consensus": {"linestyle": "-", "linewidth": 1.5},
     "array": {"linestyle": (0, (1, 1.4)), "linewidth": 1.3},
@@ -413,7 +413,7 @@ def save(fig, stem: str) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Figure 11 -- benchmark recovery
+# Figure 6 -- benchmark recovery
 # --------------------------------------------------------------------------- #
 fig = plt.figure(figsize=(7.09, 3.05))
 left, right = fig.subfigures(1, 2, width_ratios=[2.25, 1.0])
@@ -511,7 +511,7 @@ save(fig, "benchmark_recovery")
 
 
 # --------------------------------------------------------------------------- #
-# Figure 12 -- metrics against size
+# Figure 7 -- metrics against size
 # --------------------------------------------------------------------------- #
 # Rows are the two variant classes, columns the three metrics. Each panel keeps
 # its own y-scale: duplication recall is an order of magnitude below deletion

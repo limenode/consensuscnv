@@ -2,8 +2,8 @@
 
 Where used
 ----------
-Results -> "Parameterizing the Comparison" -> consensus reciprocal overlap:
-    Figure (consensus overlap)  the four-panel sweep
+Supplementary Note S1 (`manuscript/supplementary.typ`) -> Consensus reciprocal overlap threshold:
+    Supplementary Figure Consensus Overlap  the four-panel sweep
     every number quoted in that subsection
 
 This is the only parameter that changes what a *query call is*. A consensus

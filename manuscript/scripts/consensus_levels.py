@@ -4,7 +4,7 @@ Where used
 ----------
 Results -> "Consensus Level Selection":
     Table 6    binary classification of the six 30x call sets and the SNP array
-    Figure 10  the precision/recall plane, the agreement strata, and F1 against
+    Figure 5  the precision/recall plane, the agreement strata, and F1 against
                size for deletions and for duplications
     every number quoted in that section
 

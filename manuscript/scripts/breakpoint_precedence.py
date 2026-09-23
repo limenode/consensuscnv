@@ -3,7 +3,7 @@
 Where used
 ----------
 Supplementary Information (`manuscript/supplementary.typ`):
-    Supplementary Note S1                   every number in the note
+    Supplementary Note S3                   every number in the note
     Supplementary Table Breakpoint Precedence  precedence and span, all coverages
     Supplementary Figure Breakpoint Precedence A, pairwise outward extension;
                                                B, sole boundary precedence by class
@@ -62,7 +62,7 @@ LABELS = {"cnvpytor": "CNVpytor", "delly": "Delly", "gatk": "GATK-gCNV"}
 CONSENSUS_THRESHOLD = 0.5
 FOCUS = "30x"
 
-# Okabe-Ito for the callers, as in Figures 4 and 9.
+# Okabe-Ito for the callers, as in Figure 4 and Supplementary Figure Size Floor.
 COLORS = {"CNVpytor": "#0072B2", "Delly": "#D55E00", "GATK-gCNV": "#009E73"}
 
 mpl.rcParams.update({

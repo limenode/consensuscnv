@@ -2,8 +2,8 @@
 
 Where used
 ----------
-Results -> "Variance-based sensitivity analysis":
-    Figure (sensitivity)  four-panel summary of the joint grid
+Supplementary Note S2 (`manuscript/supplementary.typ`), Results:
+    Supplementary Figure Sensitivity  four-panel summary of the joint grid
     every number quoted in that section
 Supplementals:
     results/manuscript/sensitivity_indices.tsv         full decomposition, 2/3 consensus

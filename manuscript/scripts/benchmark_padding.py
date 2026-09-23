@@ -2,8 +2,8 @@
 
 Where used
 ----------
-Results -> "Parameterizing the Comparison" -> benchmark padding:
-    Figure (padding)  the four-panel sweep
+Supplementary Note S1 (`manuscript/supplementary.typ`) -> Benchmark Padding:
+    Supplementary Figure Benchmark Padding  the four-panel sweep
     every number quoted in that subsection
 
 Padding is the only parameter that changes what a *truth interval is*. It is

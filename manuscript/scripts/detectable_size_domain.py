@@ -2,8 +2,8 @@
 
 Where used
 ----------
-Results -> "Choosing a Detectable Size Domain":
-    Figure 4  the four-panel sweep
+Supplementary Note S1 (`manuscript/supplementary.typ`) -> Size Floor:
+    Supplementary Figure Size Floor  the four-panel sweep
     every number quoted in that section (crossings, ceilings, F1 peaks)
 
 A size floor is applied symmetrically to the 30x query call sets and to the

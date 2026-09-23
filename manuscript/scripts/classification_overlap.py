@@ -2,8 +2,8 @@
 
 Where used
 ----------
-Results -> "Parameterizing the Comparison" -> classification reciprocal overlap:
-    Figure (classification overlap)  the four-panel sweep
+Supplementary Note S1 (`manuscript/supplementary.typ`) -> Classification reciprocal overlap threshold:
+    Supplementary Figure Classification Overlap  the four-panel sweep
     every number quoted in that subsection
 
 Unlike the other three parameters this one changes neither call set. Both sides

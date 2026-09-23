@@ -4,7 +4,7 @@ Where used
 ----------
 Results -> "CNV Size Distribution Characteristics":
     Table 5   size statistics of the 30x call sets, the SNP array, and the benchmark
-    Figure 9  size densities at 30x and of each consensus level across coverages
+    Figure 4  size densities at 30x and of each consensus level across coverages
     every number quoted in that section
 
 Also writes the two supplementary tables that section points at: the full
@@ -74,7 +74,7 @@ COVERAGE_COLORS = {"30x": "#08519C", "6x": "#3182BD", "4x": "#6BAED6", "2x": "#B
 QUERY_ORDER = ["CNVpytor", "Delly", "GATK-gCNV", "1/3", "2/3", "3/3"]
 REFERENCE_ORDER = ["SNP array", "Benchmark"]
 
-# Line style by the role a set plays, shared with Figures 10 and 12 so that a
+# Line style by the role a set plays, shared with Figures 5 and 7 so that a
 # reader who learns the convention on one figure can read the others. The
 # benchmark takes the fourth style rather than the caller dash it used to share:
 # it is the reference every other curve is measured against, not one of them.
