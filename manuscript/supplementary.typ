@@ -305,6 +305,34 @@ Delly holds the largest share of sole boundaries at every coverage.
 
 Delly takes precedence under a union merge not because its calls are larger, but because the two read-depth callers share a bin grid and often agree exactly, which leaves Delly's off-grid breakpoints to decide the boundary.
 
+== Supplementary Note S4: Independence of the benchmark from the sequencing data <note-s4>
+
+The 1000 Genomes high-coverage SV call set, one of the three benchmark sources, was called from the same 30x alignments as the sequencing call sets in this study.
+An artifact that both pipelines draw from those reads could therefore be confirmed by the benchmark, which would score a sequencing call as a true positive while being correctly left undetected by the SNP Array.
+This note bounds how much of the comparison could rest on that shared source.
+
+=== Approach
+
+Two measurements were taken at the adopted parameters, separately for deletions and duplications.
+First, against the full merged benchmark, the benchmark intervals each call set recovered were divided by whether they are supported by the 1000 Genomes set alone or by at least one of the two long-read sources; recoveries of the first kind are the only ones the shared source could have produced.
+Second, every call set was scored again against a benchmark merged from HGSVC3 and ONT Vienna alone, neither of which shares reads with the sequencing data.
+
+=== Results
+
+Deletions depend little on the shared source (Supplementary Table Benchmark Independence).
+Of the 16,742 deletion intervals in the full benchmark above the size floor, 8.3% are supported by the 1000 Genomes set alone, and these make up 1.6--1.8% of the deletions recovered by each 2-of-3 consensus call set against 3.0% of those recovered by the SNP array.
+Against the long-read-only benchmark of 14,330 deletion intervals, deletion precision fell by 0.030--0.052 for the four consensus call sets and by 0.029 for the array, so every consensus call set retained a deletion precision between 0.838 and 0.896 against 0.570 for the array.
+Deletion recall rose slightly for every call set, since the smaller benchmark is the denominator.
+
+Duplications cannot be tested the same way.
+Of the 6,451 duplication intervals in the full benchmark above the floor, 89.1% are supported by the 1000 Genomes set alone, and the long-read-only benchmark retains 469 duplication intervals, too few for its duplication metrics to describe the same truth set.
+The duplications recovered by each call set rest on the 1000 Genomes set alone in 80.2--85.1% of cases for the consensus call sets and in 87.5% for the array.
+
+=== Conclusion
+
+The advantage of the sequencing call sets over the array on deletions does not depend on the benchmark source that shares their reads, and the array relies on that source slightly more than they do.
+The duplication results rest largely on the 1000 Genomes set; the array's equal reliance on it argues against that set merely echoing artifacts of the shared reads, but an independent duplication truth set would be needed to confirm it.
+
 // =============================================================================
 #pagebreak()
 = Supplementary Figures
@@ -450,4 +478,42 @@ Delly takes precedence under a union merge not because its calls are larger, but
   Components is the number of consensus components carrying at least two callers in which the caller appears.
   Holds is the percentage of those components in which the caller's call reaches the union start or end, counting boundaries tied with another caller; Holds alone counts only boundaries no other caller reaches.
   Span Ratio is the median ratio of the caller's own extent within a component to the component's union span.
+]
+
+#pagebreak()
+
+#block(width: 100%)[
+#set text(hyphenate: false, size: 9.5pt)
+#show table.cell.where(y: 1): strong
+#table(
+  columns: (1fr, auto, auto, auto, auto, auto, auto, auto),
+  align: (left, right, right, right, right, right, right, right),
+  stroke: none,
+  table.hline(stroke: 0.6pt),
+  table.header(
+    table.cell(rowspan: 2, align: left + bottom)[Call Set],
+    table.cell(colspan: 3, align: center)[Deletion Precision],
+    table.cell(colspan: 2, align: center)[Deletion Recall],
+    table.cell(colspan: 2, align: center)[1000G-only Recoveries (%)],
+    table.hline(start: 1, end: 4, stroke: 0.3pt),
+    table.hline(start: 4, end: 6, stroke: 0.3pt),
+    table.hline(start: 6, end: 8, stroke: 0.3pt),
+    [Full], [Long-read], [Change], [Full], [Long-read], [DEL], [DUP],
+  ),
+  table.hline(stroke: 0.6pt),
+  [30x -- 2/3 Consensus], [0.921], [0.891], [−0.030], [0.240], [0.271], [1.8], [81.3],
+  [6x -- 2/3 Consensus], [0.908], [0.868], [−0.040], [0.073], [0.082], [1.8], [85.1],
+  [4x -- 2/3 Consensus], [0.934], [0.896], [−0.038], [0.042], [0.047], [1.6], [81.9],
+  [2x -- 2/3 Consensus], [0.890], [0.838], [−0.052], [0.020], [0.022], [1.8], [80.2],
+  table.hline(stroke: 0.3pt),
+  [SNP Array], [0.599], [0.570], [−0.029], [0.030], [0.033], [3.0], [87.5],
+  table.hline(stroke: 0.6pt),
+)
+]
+
+#cap("Supplementary Table Benchmark Independence:")[
+  Dependence of the comparison on the 1000 Genomes high-coverage SV call set, which was called from the same alignments as the sequencing call sets (Supplementary Note S4).
+  Full is the merged benchmark of all three sources (16,742 deletion intervals above the 1 kb floor) and Long-read the benchmark merged from HGSVC3 and ONT Vienna alone (14,330); Change is the long-read precision minus the full precision.
+  1000G-only Recoveries is the percentage of the benchmark intervals each call set recovered against the full benchmark that are supported by the 1000 Genomes set alone, for deletions and for duplications.
+  All values at the adopted parameters.
 ]

@@ -109,35 +109,6 @@
   Email: #link("mailto:jinchuan.xing@rutgers.edu")[jinchuan.xing\@rutgers.edu]
 ]
 
-= Recent additions to the manuscript:
-- Note: You can click on the blue text to move directly to the location of interest in the manuscript.
-- Changed #link(<m_benchmark_prep>)[Benchmark Dataset Preparation].
-  - Wrote down explicit logic for which variant types from the VCF files were extracted into the BED files and while variant types were left behind.
-  - Have not chosen to add any new sets yet to fill in the lack of DUP records that we now have until further discussion.
-- Changed #link(<m_cnv_overlap>)[CNV Overlap and Adjacency Graph Building] and #link(<m_consensus_calling>)[Consensus CNV Calling].
-  - Reflect the graph-based approach that we now take to parse and merge the calls.
-- Added #link(<m_null_model>)[Null Model for Caller Agreement].
-  - This proposes that if all of the calls in the aggregate call set were all part of a single population with a predefined probability of being detected by a caller, then you should be able to model the single-caller counts from the two-caller and three-caller consensus counts.
-  - Rejecting this allows us to propose that there exists at least two populations of calls with different behaviors, with one being primarily composed of calls that are detectable independent of caller algorithm, and the other being primarily composed of calls that were identified due to caller specific effects, whether that be incorrect calls, artifact capture, algorithmic differences, etc.
-- Expanded call set parsing and analysis sections of Results, see #link(<r_input_call_sets>)[Input Call Sets After Parsing] and #link(<r_sequence_consensus>)[Sequence-based Consensus Call Set Construction].
-  - Before, these sections were combined into one and much shorter because of how trivial our old operations were. Now we have considerably more information so I decided to split the sections up between statistics on the raw counts from all call set sources after the initial parsing step, and the consensus calling which now includes the new null model for identifying the populations of calls within the consensus set.
-  - The Venn diagram for the Consensus section has been updated, and now there are tables for the breakdown of all 7 parts of the Venn diagram (3 for single-callers, 3 for pairwise combinations, and 1 for all callers).
-- Added parameterization section, Parameterizing the Comparison (moved to Supplementary Note S1 on 2026-09-23).
-  - This includes four subsections: Benchmark Padding, Size Floor, Consensus reciprocal overlap threshold, and Classification reciprocal overlap threshold.
-  - The performance of the query/benchmark comparison is analyzed across the appropriate range for each parameter of interest.
-  - This is coupled with a subsequent section on the Variance-based sensitivity analysis to show that the combined effects of parameter combinations are not significant enough to warrant a combinatorial analysis, and that analyzing each parameter one at a time is sufficient enough.
-- Added sensitivity analysis and Pareto front sections in Methods, Variance-based sensitivity analysis and Pareto front (moved with its Results to Supplementary Note S2 on 2026-09-23).
-  - This includes the equations for deriving the first-order Sobol index, and how this corresponds to the contribution that each parameter has to a given performance metric.
-  - The aggregation of the first order Sobol indices is a measure of the extent to which the one-at-a-time profiles describe the behavior of the pipeline compared to the joint effects of multiple parameters. If the first order Sobol indices add to close to 1, that means that the combined affects of parameters are negligible and that the one-at-a-time profiles are reasonable methods to determine individual parameter optimums.
-  - The Pareto front shows all of the parameter combinations that yield the best performance assuming that a subset of other parameters are leaved fixed. This discards all combinations that are strictly worse than others, and yields a "front" of combinations. We show the Pareto front on a Precision vs. Recall graph, which points corresponding to one combination of four different parameters (benchmark padding, size floor, consensus reciprocal overlap, classification reciprocal overlap).
-== CNV coverage data results sections
-- Added #link(<r_adopted_parameters>)[Adopted Parameters], which is a summary of the parameterization results.
-  - If we are moving the parameterization text to supplementals or to another text, then we can tweak this text a bit and have it serve as a standalone part to familiarize the reader with the parameters that we use for the downstream results and analysis.
-- Added #link(<r_size_distributions>)[CNV Size Distribution Characteristics], #link(<r_consensus_levels>)[Consensus Level Selection], and #link(<r_coverage_performance>)[Performance of 2-of-3 Consensus Call Sets across Coverages] sections.
-  - All three of these are updated versions of the text that I had in the old manuscript.
-  - Due to all of the refinements that we have made, the data ended up being a lot stronger in favor of lpWGS being an effective replacement for SNP Arrays for CNV detection.
-  - The performance of the sequence-based call sets are much better than the SNP Array, and most of the CNVs (>=90%) that were detected by the SNP Array were accurately discovered by the 2-of-3 consensus call set.
-
 = Abstract
 
 // [To be written.]
@@ -1025,6 +996,11 @@ At 2x, the lowest coverage evaluated, the sequencing call set retained the highe
 Recall rose steeply with depth, most of all for deletions, where it rose twelve-fold from 2x to 30x.
 The gain came from the small end of the size range: lowering coverage removed small CNVs from the call set rather than degrading the calls that survived, as deletion precision at 2x stayed close to that at 30x while the deletion F1 peak moved to larger sizes (Figure 7), so the 2x -- 6x call sets performed best in the mid-to-large regime that SNP arrays are typically used to target.
 
+The smallest CNV the comparison can score is set by the limitations of the callers.
+CNVpytor and GATK-gCNV segment read depth in 1 kb bins, which was a major motivator for setting the size floor to 1 kb, and CNVpytor reports nothing smaller than 2 kb, where a third of the benchmark intervals above the floor lie (Table 5).
+Depth then raises the effective limit above the bin, since at 4x and 2x the deletion call sets hold too few calls below roughly 2 and 4 kb for their performance to be estimated at all (Figure 7).
+A smaller bin would lower the design limit at 30x, but at the depths of a BGE run each bin already holds few reads, so the resolution attainable from low-pass data is bounded from below by the bin size and by the depth needed to fill it.
+
 The intervals recovered by sequencing and by the array only partly coincide.
 The 30x set recovered nearly all of the benchmark intervals the array recovered, but that share fell steadily with depth, and between 4x and 2x the array came to recover more intervals that the sequencing set missed than the reverse (Figure 6B).
 At 4x and 6x, sequencing therefore recovers more CNVs in total while recovering only about half of the array's or fewer, so the case for replacement rests on total yield and precision rather than on reproducing what an array would have reported.
@@ -1055,6 +1031,19 @@ Those private components have a precision of 0.263, against 0.824 where two call
 Requiring agreement removes a low-precision call only when no second caller reproduces it.
 Had two of the three callers shared an algorithmic basis, the artifacts that arise from that algorithm's limitations would have been more likely reproduced by both, and a low-precision population would have been carried into the consensus call set even at the higher consensus stringencies.
 
+For the same reason, the 2/3 consensus call set was carried forward rather than the 1/3 set, even though the 1/3 set has the higher F1.
+Requiring a second caller raised precision at 30x from 0.391 to 0.898 and reduced the calls without benchmark support roughly thirty-fold, and the calls it removed are predominantly the caller-private population that a single-population model of caller agreement could not account for, which is better described as artifacts of individual callers than as variants the other callers missed (Tables 3 and 6).
+The same requirement halved recall, but recall carries less weight in this choice than it would against a complete truth set.
+Much of the benchmark derives from long-read and assembly-based discovery that neither short-read sequencing nor a microarray can replicate, so recall is expected to remain low for every call set evaluated here.
+Precision, by contrast, determines how much downstream effort a call set demands.
+Whether the aim is etiology discovery through functional validation or diagnosis in a clinical setting, each reported CNV must be followed up before it can be acted on #c[Ho 2020] #c[Liu 2022], and a call set in which nine of every ten calls are supported uses that effort far more efficiently than one in which fewer than two of every five are.
+
+The case for consensus strengthens as depth falls.
+Individual callers do not report fewer calls at low coverage, and GATK-gCNV reported more at 2x than at 30x.
+The number of components carried by a single caller changed little across the four coverages, while the number on which at least two callers agreed fell nearly seven-fold, so the ratio of private to concordant components rose from 4 at 30x to 26 at 2x (Table 4).
+A single-caller call set at BGE depths therefore looks as productive in recovery as one from deep sequencing while carrying a far larger share of caller-specific calls, many of which are per-caller artifacts that don't correspond to a benchmark CNV call.
+The agreement requirement matters more, not less, at the depths a BGE run delivers.
+
 Duplications are a known hard class to detect in short-read CNV/SV analysis and often show more caller disagreement and metric sensitivity #c[Ho 2020].
 Independent lcWGS benchmarking echoes this: amplification calls diverged most across callers and were prone to over-detection in sparse data, whereas deletion calls remained comparatively stable #c[Wang 2025].
 Our results agree with this at every coverage.
@@ -1063,6 +1052,7 @@ The two classes also peak in different size regimes, deletions in the tens of ki
 Duplication detection also responds far less to depth than deletion detection does: from 30x to 2x, the number of benchmark duplications recovered fell three-fold, against twelve-fold for deletions (Table 7).
 The number of duplication calls barely changed over the same range, because calls without benchmark support rose as the supported ones fell, which matches the over-detection in sparse data that #c[Wang 2025] reported.
 This is in line with our expectation that the detection of duplications from short-read data is limited by the data type rather than by its depth, and it is why every performance statistic is reported by class.
+The duplication truth set is also the less independent of the two classes, as it rests mostly on a single benchmark source, a limitation we return to below.
 
 Consensus components were collapsed by union, so a merged call spans the minimum start and the maximum end position across its member calls.
 Work from other SV analysis toolkits such as Truvari has demonstrated that slight differences in the implementation details of merging and matching SV calls propagate into substantial differences in results #c[English 2022], so this policy warrants being stated explicitly.
@@ -1084,7 +1074,13 @@ The 50% reciprocal overlap required for a match may also have rejected genuine p
 Lowering it raises precision and recall together (Supplementary Note S1), but only by crediting calls that share less of their extent with a benchmark interval, and at 50% the matching is one-to-one for every call set but the 1/3 consensus, so each true positive corresponds to exactly one benchmark interval.
 Because every call set was scored against the same benchmark intervals in the same thirteen individuals, these limitations bear on the absolute values of precision and recall more than on the comparisons between call sets.
 
-The benchmark and the sequencing call sets are not fully independent: the 1000 Genomes high-coverage SV call set, one of the three benchmark sources, was called from the same 30x alignments as our sequencing call sets (Methods), which may favour the sequencing call sets over the SNP array.
+The benchmark and the sequencing call sets are not fully independent.
+The 1000 Genomes high-coverage SV call set, one of the three benchmark sources, was called from the same 30x alignments as our sequencing call sets (Methods), so an artifact that both pipelines draw from those reads could be scored as a true positive, even if the SNP Array correctly identifies that the same genomic region contains no CNV call.
+This could favour the sequencing call sets over the array, and we tested it by re-scoring every call set against a benchmark built from the two long-read sources alone (Supplementary Note S4).
+For deletions the effect is small and does not favour sequencing: fewer than 2% of the deletions recovered by each sequencing call set rest on the 1000 Genomes set alone, against 3% for the array, and without that source deletion precision fell by 0.03--0.05 for every call set, the array included, leaving the gap between sequencing and the array intact.
+Duplications cannot be separated from the shared source in the same way, since nine in ten benchmark duplications above the size floor come from the 1000 Genomes set alone, so the duplication results rest largely on that source.
+Although, the sequencing-based call sets' duplication recoveries and the array's duplication recoveries depend on it to roughly the same degree, so no definitive bias conclusion was drawn.
+
 The handling of poorly mappable regions also differed between the 30x arm and the lower coverages.
 Those regions were removed from the alignments before subsampling, so the 6x, 4x, and 2x callers had no reads within them, whereas the 30x call sets were generated from the complete alignments and the same regions were removed afterwards at the level of calls.
 Accordingly, the mask removed 45.4% of CNVpytor calls and 40.4% of GATK-gCNV calls at 30x, against 8.8--10.4% and 0.1--0.3% at the lower coverages (Supplementary Table S2).
@@ -1097,6 +1093,7 @@ At the coverages a BGE run delivers, the 2/3 consensus call sets detected deleti
 Below 6x, however, they recovered fewer than half of the benchmark intervals the array recovered, and duplications remained difficult to detect at every coverage, so the case for replacement rests on the yield and precision of deletion calls rather than on reproducing what an array would report.
 This approach is especially practical when sequencing data or sequencing infrastructure is already available; conversely, SNP array testing may remain advantageous for legacy laboratory pathways or settings where computational capacity is the overriding constraint.
 Building on this work, our next step is to validate performance on real BGE sequencing data rather than downsampled high-coverage WGS, which will also show whether the drift towards duplications at low depth reflects the data or the subsampling, and to characterize performance at coverage depths that may reflect higher-yield BGE configurations #c[Boltz 2026].
+Duplications would also benefit from a truth set independent of the sequencing data, such as long-read or assembly-based duplication calls for the same individuals, since the duplication benchmark used here rests largely on a source that shares its reads with the query.
 A further direction is stratification beyond size, benchmarking separately across genomic contexts known to challenge CNV discovery, such as segmental duplications, tandem repeats and low-complexity sequence, and low-mappability or GC-extreme regions, using established stratification resources #c[Krusche 2019] #c[Dwarshuis 2024].
 Together with a larger cohort and targeted validation of calls, these additions should allow us to state more precisely when lcWGS can fully supplant microarrays for CNV detection and where array-based approaches remain warranted.
 
@@ -1105,11 +1102,7 @@ Building on prior CNV benchmarking frameworks #c[Masood 2024] #c[Wang 2025], the
 Above all, requiring agreement between callers that draw on independent sources of evidence removed nearly all of the calls without benchmark support for the loss of about half of those with it, a trade that makes a multi-caller consensus the natural basis for any low-pass CNV call set intended for downstream analysis or validation.
 The consensus calling and evaluation framework is available as the open-source Python package consensuscnv (#link("https://github.com/limenode/consensuscnv")), and can be applied directly to real BGE data and to larger cohorts.
 
-= Supplementals
 
-#link("https://docs.google.com/document/d/1570MKXc9A6cBSIJ-BAegH1mik7SeUY4wc4HnASq4neA/edit?usp=sharing")[CNV Benchmark Paper - Supplementals]
-
-#link("https://docs.google.com/spreadsheets/d/1VAIRYjwxRzuHfRzZ0Ap5H1hdbB0husPFGBHiKqbmgHE/edit?usp=sharing")[CNV Benchmark Paper - Supplementals Spreadsheet]
 
 = References
 
