@@ -1179,7 +1179,7 @@ CNVpytor and the 1-of-3 set, which it dominates by count, rise to F1 of 0.544 an
 Requiring a second caller forfeits most of the duplication recall CNVpytor supplies: the 2-of-3 set peaks at 0.269, and the 3-of-3 set, with 115 duplication calls, is drawn only between 12 and 18 kb.
 
 The SNP array falls below every sequence-derived call set on all three metrics, at a precision of 0.371, a recall of 0.025 and an F1 of 0.046.
-Composition accounts for much of that: 45.9% of its calls are duplications (Table 5), and its duplication-only precision is 0.101, which sits signifantly below that of all sequence-derived call sets (Table 6).
+Composition accounts for much of that: 45.9% of its calls are duplications (Table 5), and its duplication-only precision is 0.101, which sits significantly below that of all sequence-derived call sets (Table 6).
 
 We carried the 2-of-3 consensus into the coverage comparison.
 Its precision of 0.898 leaves a candidate set clean enough to act on while recovering 4,344 benchmark intervals, against 9,217 intervals at a precision of 0.391 for the 1-of-3 set and 2,336 at 0.973 for the 3-of-3 set.
@@ -1231,9 +1231,10 @@ Precision falls from 0.898 at 30x to 0.834, 0.786 and 0.626 at 6x, 4x and 2x, an
 
 #v(0.8em)
 
-Deletion precision stays relatively stable with decereasing depths, holding at 0.921, 0.908, 0.934 and 0.890 across the four coverages, while duplication precision falls from 0.687 to 0.552, 0.475 and 0.327 (Table 7).
+Deletion precision stays relatively stable with decreasing depth, holding at 0.921, 0.908, 0.934 and 0.890 across the four coverages, while duplication precision falls from 0.687 to 0.552, 0.475 and 0.327 (Table 7).
 Most of the fall in overall precision is the drift towards a higher composition of duplications, and the remainder is the loss of accuracy within that class due to less evidence.
 Recall falls twelve-fold for deletions, from 0.240 to 0.073, 0.042 and 0.020, and three-fold for duplications, from 0.051 to 0.030, 0.027 and 0.017.
+The number of duplication calls changes little with depth, from 476 at 30x to 339 at 2x, because the calls without benchmark support rise from 149 to 228 as those with support fall from 327 to 111.
 The SNP array recovers more deletions than the 2x set, at a recall of 0.030 against 0.020, and fewer duplications, at 0.011 against 0.017.
 
 #figure(
@@ -1291,18 +1292,18 @@ The 6x, 4x, and 2x call sets were not generated from independent sequencing runs
 The 30x call set is therefore the theoretical ceiling of the same pipeline rather than an external reference point: a difference between two coverages is attributable to depth alone, whereas a difference between a sequencing call set and the array separates what is limited by coverage from what is limited by the method.
 
 Low-pass WGS has been shown to support cost-effective CNV calling in several settings #c[Kucharík 2021] #c[Mazzonetto 2024] #c[Mazzonetto 2024 (2)], and our results place the 2x -- 6x coverages delivered by a BGE run against a SNP array on the same individuals, with a 30x ceiling derived from the same libraries.
-Call sets at 4x coverage and above exceeded the SNP array on both precision and recall, combined (precision 0.786 -- 0.898 against 0.371; recall 0.038 -- 0.187 against 0.025) and within each variant class (Table 7), and did so at every CNV size at which both could be estimated for precision and at every size above 3 kb for recall (Figure 12).
-At 2x, the lowest coverage evaluated, the sequencing call set retained the higher precision (0.626 against 0.371) while the array recovered more deletions (recall 0.030 against 0.020) and fewer duplications (0.011 against 0.017), and the array's deletion F1 exceeded the 2x set's below 18 kb and fell below it above.
-Recall doubled from 2x to 4x (0.019 to 0.038), rose a further 1.6-fold to 6x (0.061) and 3.1-fold to 30x (0.187), and deletion recall rose twelve-fold across the range (0.020 to 0.240).
-The gain came from the small end of the size range: lowering coverage removed small CNVs from the call set rather than degrading the calls that survived, with 2x deletion precision within 0.04 of the 30x set's and the deletion F1 peak moving from 10 kb at 30x to 40 kb at 2x, so the 2x -- 6x call sets performed best in the mid-to-large regime that SNP arrays are typically used to target.
+Call sets at 4x coverage and above exceeded the SNP array on both precision and recall, overall and within each variant class (Table 7), and at nearly every CNV size at which both could be estimated (Figure 12).
+At 2x, the lowest coverage evaluated, the sequencing call set retained the higher precision, while the array recovered more deletions and fewer duplications, and its deletion F1 exceeded the 2x set's for CNVs below about 18 kb.
+Recall rose steeply with depth, most of all for deletions, where it rose twelve-fold from 2x to 30x.
+The gain came from the small end of the size range: lowering coverage removed small CNVs from the call set rather than degrading the calls that survived, as deletion precision at 2x stayed close to that at 30x while the deletion F1 peak moved to larger sizes (Figure 12), so the 2x -- 6x call sets performed best in the mid-to-large regime that SNP arrays are typically used to target.
 
 The intervals recovered by sequencing and by the array only partly coincide.
-The 30x set recovered 91.3% of the 574 benchmark intervals the array recovered, but that share fell to 51.6%, 41.1%, and 25.3% at 6x, 4x, and 2x, and the array overtook sequencing between 4x and 2x, with 429 intervals recovered by the array alone against 306 by the 2x set alone (Figure 11B).
-At BGE depths, sequencing therefore recovers more CNVs in total (880 -- 1,425 against 574 at 4x -- 6x) without recovering most of the array's, so the case for replacement rests on total yield and precision rather than on reproducing what an array would have reported.
+The 30x set recovered nearly all of the benchmark intervals the array recovered, but that share fell steadily with depth, and between 4x and 2x the array came to recover more intervals that the sequencing set missed than the reverse (Figure 11B).
+At 4x and 6x, sequencing therefore recovers more CNVs in total while recovering only about half of the array's or fewer, so the case for replacement rests on total yield and precision rather than on reproducing what an array would have reported.
 
 The precision gap is the largest difference in the comparison and the one with the most direct consequence for use.
-Of the array's 1,548 calls, 974 (62.9%) matched no benchmark interval, against 270 of 721 (37.4%) at 2x and 492 of 4,836 (10.2%) at 30x; on deletions alone the array's precision was 0.599 against 0.890 -- 0.934 for every sequencing call set, and on duplications 0.101 against 0.327 -- 0.687 (Table 7).
-A candidate CNV carried into downstream analysis or functional validation costs about the same to follow up whether or not it is real #c[Ho 2020] #c[Liu 2022], so at these precisions the array requires 2.7 candidates to be followed up per call with benchmark support, and 1.7 for deletions alone, against 1.6 at 2x and 1.1 -- 1.3 at 4x and above.
+Over 60% of the array's calls matched no benchmark interval, against 37% at 2x and 10% at 30x, and the gap persists within each variant class, with the array's deletion calls 0.599 precise against at least 0.890 for every sequencing call set (Table 7).
+A candidate CNV carried into downstream analysis or functional validation costs about the same to follow up whether or not it is real #c[Ho 2020] #c[Liu 2022], so at these precisions the array requires 2.7 candidates to be followed up for every call with benchmark support, against 1.6 at 2x and 1.1 -- 1.3 at 4x and above.
 Where the goal is diagnosis or etiology discovery, that follow-up is part of the per-sample cost of the assay, and it widens the margin in favour of sequencing beyond the sequencing cost alone.
 
 BGE incurs roughly 28% of the per-sample cost of deep WGS (\~\$99 vs. \$350) while remaining cost-comparable to a GWAS array #c[Boltz 2026].
@@ -1328,13 +1329,11 @@ Had two of the three callers shared an algorithmic basis, the artifacts that ari
 
 Duplications are a known hard class to detect in short-read CNV/SV analysis and often show more caller disagreement and metric sensitivity #c[Ho 2020].
 Independent lcWGS benchmarking echoes this: amplification calls diverged most across callers and were prone to over-detection in sparse data, whereas deletion calls remained comparatively stable #c[Wang 2025].
-Our results corroborate with this at every coverage.
-Duplications were detected with lower precision and much lower recall than deletions: duplication precision fell from 0.687 at 30x to 0.552, 0.475, and 0.327 while deletion precision held between 0.890 and 0.934, and duplication recall did not exceed 0.051 against 0.240 for deletions at 30x (Table 7).
-The array's duplication calls had a precision of 0.101, at a recall of 0.011.
-The two classes also peak in different size regimes, with deletion F1 peaking between 10 and 40 kb depending on coverage and duplication F1 peaking above 100 kb at every coverage (Figure 12).
-Duplication detection also responds far less to depth than deletion detection does.
-The number of benchmark duplications recovered fell three-fold from 30x to 2x, from 327 to 111, while recovered deletions fell twelve-fold, from 4,017 to 340 (Table 7).
-The number of duplication calls barely moved over the same range, from 476 to 339, because the calls without benchmark support rose from 149 to 228 as the supported ones fell, which matches the over-detection in sparse data that #c[Wang 2025] reported.
+Our results agree with this at every coverage.
+Duplications were detected with lower precision and much lower recall than deletions, and duplication precision fell with depth while deletion precision held steady (Table 7); the array's duplication calls were only 10% precise.
+The two classes also peak in different size regimes, deletions in the tens of kilobases and duplications above 100 kb (Figure 12).
+Duplication detection also responds far less to depth than deletion detection does: from 30x to 2x, the number of benchmark duplications recovered fell three-fold, against twelve-fold for deletions (Table 7).
+The number of duplication calls barely changed over the same range, because calls without benchmark support rose as the supported ones fell, which matches the over-detection in sparse data that #c[Wang 2025] reported.
 This is in line with our expectation that the detection of duplications from short-read data is limited by the data type rather than by its depth, and it is why every performance statistic is reported by class.
 
 Consensus components were collapsed by union, so a merged call spans the minimum start and the maximum end position across its member calls.
