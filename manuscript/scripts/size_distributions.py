@@ -74,6 +74,23 @@ COVERAGE_COLORS = {"30x": "#08519C", "6x": "#3182BD", "4x": "#6BAED6", "2x": "#B
 QUERY_ORDER = ["CNVpytor", "Delly", "GATK-gCNV", "1/3", "2/3", "3/3"]
 REFERENCE_ORDER = ["SNP array", "Benchmark"]
 
+# Line style by the role a set plays, shared with Figures 10 and 12 so that a
+# reader who learns the convention on one figure can read the others. The
+# benchmark takes the fourth style rather than the caller dash it used to share:
+# it is the reference every other curve is measured against, not one of them.
+LINE_STYLES = {
+    "consensus": {"linestyle": "-", "linewidth": 1.6},
+    "caller": {"linestyle": (0, (4, 1.6)), "linewidth": 1.0},
+    "array": {"linestyle": (0, (1, 1.4)), "linewidth": 1.3},
+    "benchmark": {"linestyle": (0, (5, 1.4, 1, 1.4)), "linewidth": 1.3},
+}
+
+
+def role(name: str) -> str:
+    if name.endswith("/3"):
+        return "consensus"
+    return {"SNP array": "array", "Benchmark": "benchmark"}.get(name, "caller")
+
 
 def bed_paths(root: Path, subdirs: tuple[str, ...]) -> list[str]:
     """Every per-sample BED under the named subdirectories of `root`.
@@ -230,9 +247,16 @@ def density(intervals: IntervalSet) -> np.ndarray:
     return gaussian_kde(np.log10(intervals.lengths.astype(np.float64)))(GRID)
 
 
-def draw(ax, curves: dict[str, np.ndarray], colors: dict[str, str], widths: dict[str, float] | None = None):
+def draw(ax, curves: dict[str, np.ndarray], colors: dict[str, str], styles: dict[str, dict] | None = None):
+    """Draw each curve, styled by role where `styles` gives one for its name.
+
+    The coverage panels pass no styles: within a panel the curves are one set at
+    four depths, which the Blues ramp already separates, and a dashed coverage
+    would read as a different kind of set.
+    """
     for name, curve in curves.items():
-        ax.plot(GRID, curve, color=colors[name], lw=(widths or {}).get(name, 1.0), label=name)
+        ax.plot(GRID, curve, color=colors[name], label=name,
+                **(styles or {}).get(name, {"linewidth": 1.2}))
     ax.set_xlim(GRID[0], GRID[-1])
     ax.set_ylim(bottom=0)
     ax.set_xticks([3, 4, 5, 6])
@@ -244,10 +268,9 @@ def draw(ax, curves: dict[str, np.ndarray], colors: dict[str, str], widths: dict
 fig, axes = plt.subplots(2, 2, figsize=(7.09, 5.0))
 
 # (A) every call set at 30x, against the two reference sets.
-widths = {**{k: 1.0 for k in ("CNVpytor", "Delly", "GATK-gCNV")}, **{f"{k}/3": 1.5 for k in CONSENSUS_LEVELS}}
 panel_a = {name: density(sets_by_coverage["30x"][name]) for name in QUERY_ORDER}
 panel_a |= {name: density(references[name]) for name in REFERENCE_ORDER}
-draw(axes[0, 0], panel_a, COLORS, {**widths, "Benchmark": 1.3, "SNP array": 1.3})
+draw(axes[0, 0], panel_a, COLORS, {name: LINE_STYLES[role(name)] for name in panel_a})
 axes[0, 0].set_ylabel("Density")
 axes[0, 0].legend(frameon=False, ncol=2, handlelength=1.4, columnspacing=1.0, loc="upper right")
 
@@ -264,8 +287,9 @@ ymax = max(
     benchmark_curve.max(),
 )
 for ax, level in zip(axes.flat[1:], CONSENSUS_LEVELS):
-    ax.plot(GRID, benchmark_curve, color="#000000", lw=0.9, ls=(0, (3, 2)), label="Benchmark")
-    draw(ax, consensus_curves[level], COVERAGE_COLORS, {cov: 1.2 for cov in COVERAGES})
+    ax.plot(GRID, benchmark_curve, color=COLORS["Benchmark"], label="Benchmark",
+            **LINE_STYLES["benchmark"])
+    draw(ax, consensus_curves[level], COVERAGE_COLORS)
     ax.set_ylim(0, ymax * 1.05)
     ax.set_title(f"{level}-of-3 consensus", pad=3)
     if level == 1:
@@ -290,9 +314,10 @@ plt.close(fig)
 # --------------------------------------------------------------------------- #
 fig, axes = plt.subplots(1, 3, figsize=(7.09, 2.2), sharey=True)
 for ax, caller in zip(axes, CALLERS):
-    ax.plot(GRID, benchmark_curve, color="#000000", lw=0.9, ls=(0, (3, 2)), label="Benchmark")
+    ax.plot(GRID, benchmark_curve, color=COLORS["Benchmark"], label="Benchmark",
+            **LINE_STYLES["benchmark"])
     draw(ax, {cov: density(sets_by_coverage[cov][LABELS[caller]]) for cov in COVERAGES},
-         COVERAGE_COLORS, {cov: 1.2 for cov in COVERAGES})
+         COVERAGE_COLORS)
     ax.set_title(LABELS[caller], pad=3)
     ax.set_xlabel("CNV size")
 axes[0].set_ylabel("Density")

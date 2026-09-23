@@ -145,7 +145,7 @@ mpl.rcParams.update({
 # uses; the size floor as a thin rule in both panels.
 CLASS_COLORS = {"DEL": "#4D4D4D", "DUP": "#CC79A7"}
 SOURCE_STYLES = {
-    "merged truth set": {"color": "#000000", "linestyle": "-", "linewidth": 1.6},
+    "merged truth set": {"color": "#000000", "linestyle": (0, (5, 1.4, 1, 1.4)), "linewidth": 1.6},
     "1000G": {"color": "#000000", "linestyle": (0, (4, 1.6)), "linewidth": 1.0},
     "ont_vienna": {"color": "#000000", "linestyle": (0, (1, 1.4)), "linewidth": 1.2},
 }

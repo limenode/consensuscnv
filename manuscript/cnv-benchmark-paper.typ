@@ -1,8 +1,6 @@
 // =============================================================================
 // Evaluating Low-Pass Whole Genome Sequencing as a Cost-Effective Method
 // for Copy Number Variant Detection
-//
-// Prose uses semantic line breaks: one sentence per line, no column limit.
 // =============================================================================
 
 #set document(
@@ -1055,7 +1053,8 @@ No upper bound is imposed.
 #cap("Figure 9:")[
   Size densities of the CNV call sets, estimated by Gaussian kernel density on $log_10$ size and drawn on a log-10 axis.
   (A) The six 30x call sets, the SNP microarray call set, and the merged benchmark.
-  (B--D) Each consensus level at all four coverages, with the merged benchmark repeated as a dashed reference; the three panels share a vertical scale.
+  Consensus call sets are drawn solid, individual callers dashed, the SNP microarray dotted, and the merged benchmark in black dash-dot, as in every figure that draws these sets together.
+  (B--D) Each consensus level at all four coverages, with the merged benchmark repeated as a reference; the three panels share a vertical scale.
   All sets are restricted to the adopted 1 kb floor, which truncates each density on the left.
   The equivalent panels for the individual callers are given in Supplemental Figure Per Caller Size Distributions.
 ]
@@ -1338,14 +1337,15 @@ The number of benchmark duplications recovered fell three-fold from 30x to 2x, f
 The number of duplication calls barely moved over the same range, from 476 to 339, because the calls without benchmark support rose from 149 to 228 as the supported ones fell, which matches the over-detection in sparse data that #c[Wang 2025] reported.
 This is in line with our expectation that the detection of duplications from short-read data is limited by the data type rather than by its depth, and it is why every performance statistic is reported by class.
 
-// NOTE(lionel): condensed on 2026-08-17 from the original intersection-vs-union
-// paragraph, since that axis was cut from Methods and Results. The [English 2022]
-// Truvari citation is retained here. Revisit on your Discussion pass.
 Consensus components were collapsed by union, so a merged call spans the minimum start and the maximum end position across its member calls.
-Work from other SV analysis toolkits such as Truvari has demonstrated that slight differences in the implementation details of merging and matching SV calls propagate into substantial differences in results #c[English 2022], so this policy warrants being stated explicitly rather than treated as an incidental detail.
-Union merging may aggregate adjacent but distinct CNVs where callers disagree on breakpoint position, or where one caller preferentially reports larger intervals than the others.
-It also retains whichever member call carries the most permissive breakpoints, which in our data was frequently Delly: CNVs called by Delly that had equivalent calls from another tool often had inferred breakpoints extending past the 1 kb bin boundaries used by CNVpytor and GATK-gCNV (Supplemental Figure Modulus Size Distribution).
-Union merging therefore preserves more of Delly's breakpoint-specific information than a policy restricted to the region of agreement between callers would.
+Work from other SV analysis toolkits such as Truvari has demonstrated that slight differences in the implementation details of merging and matching SV calls propagate into substantial differences in results #c[English 2022], so this policy warrants being stated explicitly.
+The concern with a union is that it may aggregate adjacent but distinct CNVs where callers disagree on breakpoint position, or where one caller preferentially reports larger intervals than the others, in which case a consensus call would record co-location rather than agreement about an event.
+Across every consensus level and every reciprocal overlap threshold we examined, the median ratio of a component's span to the span of the longest call inside it was 1.00, the 95th percentile never exceeded 1.16, and the largest ratio anywhere in the sweep was 2.83.
+Therefore, we conclude that the consensus calls reflect agreement between callers about one event rather than adjacent calls chained together by the merging algorithm.
+A union also retains whichever member call reaches furthest at each end, and which caller that is follows from how each places its breakpoints.
+CNVpytor and GATK-gCNV share a 1 kb bin grid and frequently report identical coordinates, whereas Delly resolves breakpoints from split reads and read pairs and almost never coincides with either, so it is Delly that most often decides the boundary of a consensus deletion, while CNVpytor more often decides that of a duplication (Supplementary Note S1).
+In most consensus deletions and half of consensus duplications, at least one end of the call is a breakpoint that only Delly reported.
+Had we kept only the region where the callers overlap, that end would instead have been set by one of the read-depth callers, at a 1 kb bin boundary.
 
 A notable limitation of this study is the absence of a verifiably comprehensive benchmark set.
 The merged benchmark used here aggregates structural variant calls from three datasets #c[1000G 2015]#c[Logsdon 2025]#c[Schloissnig 2025], — each produced by different calling algorithms and parameterization strategies.
@@ -1365,7 +1365,7 @@ An additional future direction to explore includes length-only stratification by
 Together with expanded sample size and targeted validation of calls, these additions should allow us to state more precisely when lcWGS can fully supplant microarrays for CNV detection and where traditional array-based approaches remain warranted.
 
 In conclusion, to our knowledge we have performed the first performance comparison between high-coverage, low-coverage, and SNP-array based CNV detection using modern CNV calling tools.
-Our work provides a benchmark evaluation methodology extensible to low-coverage sequencing data using multiple benchmark CNSV collections, rooted in the paradigms of prior studies #c[Masood 2024] #c[Wang 2025].
+Our work provides a benchmark evaluation methodology extensible to low-coverage sequencing data using multiple benchmark CNV collections, rooted in the paradigms of prior studies #c[Masood 2024] #c[Wang 2025].
 We have created a solid foundation for the aggregation of several popular, mathematically rigorous, and well adapted CNV calling tools to optimize the recovery of true candidate CNVs.
 
 = Supplementals

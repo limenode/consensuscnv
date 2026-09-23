@@ -70,6 +70,9 @@ COLORS = {
     "1/3": "#9E9AC8", "2/3": "#6A51A3", "3/3": "#3F007D",
 }
 BENCHMARK_COLOR = "#000000"
+# Dash-dot marks the benchmark on every figure that draws it beside call sets
+# (Figures 2 and 9 likewise); the caller dash is a different role.
+BENCHMARK_STYLE = {"linewidth": 1.3, "linestyle": (0, (5, 1.4, 1, 1.4))}
 # Consensus sets carry the argument of the section, so they are drawn heavier.
 WIDTHS = {**{LABELS[c]: 1.0 for c in CALLERS}, **{f"{k}/3": 1.5 for k in CONSENSUS_LEVELS}}
 ORDER = ["CNVpytor", "Delly", "GATK-gCNV", "1/3", "2/3", "3/3"]
@@ -231,7 +234,7 @@ def dress(ax, ylabel: str, letter: str, bottom: bool) -> None:
 
 
 ax = axes[0, 0]
-ax.plot(floors, n_truth, color=BENCHMARK_COLOR, linewidth=1.1, linestyle=(0, (4, 2)), zorder=4)
+ax.plot(floors, n_truth, color=BENCHMARK_COLOR, zorder=4, **BENCHMARK_STYLE)
 for name in ORDER:
     ax.plot(floors, curves[name]["n_query"], color=COLORS[name], linewidth=WIDTHS[name], zorder=3)
 ax.set_yscale("log")
@@ -273,7 +276,7 @@ dress(ax, "F1", "D", bottom=True)
 
 fig.legend(
     handles=[Line2D([], [], color=COLORS[n], linewidth=WIDTHS[n], label=n) for n in ORDER]
-    + [Line2D([], [], color=BENCHMARK_COLOR, linewidth=1.1, linestyle=(0, (4, 2)), label="Benchmark")],
+    + [Line2D([], [], color=BENCHMARK_COLOR, label="Benchmark", **BENCHMARK_STYLE)],
     loc="lower center", ncol=7, frameon=False, bbox_to_anchor=(0.5, 0.005),
     handlelength=1.8, columnspacing=1.4, handletextpad=0.5,
 )
