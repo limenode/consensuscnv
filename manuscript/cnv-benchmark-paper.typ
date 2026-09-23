@@ -1100,9 +1100,24 @@ Together with a larger cohort and targeted validation of calls, these additions 
 In conclusion, we compared CNV detection at the coverages a BGE run delivers with detection from a SNP microarray in the same individuals, against a 30x ceiling derived from the same sequencing libraries, and scored every call set against a merged benchmark separately for deletions and duplications.
 Building on prior CNV benchmarking frameworks #c[Masood 2024] #c[Wang 2025], the evaluation builds the comparison between call sets once and filters it at each parameter setting, so that the influence of every parameter on the results could be measured rather than assumed.
 Above all, requiring agreement between callers that draw on independent sources of evidence removed nearly all of the calls without benchmark support for the loss of about half of those with it, a trade that makes a multi-caller consensus the natural basis for any low-pass CNV call set intended for downstream analysis or validation.
-The consensus calling and evaluation framework is available as the open-source Python package consensuscnv (#link("https://github.com/limenode/consensuscnv")), and can be applied directly to real BGE data and to larger cohorts.
+The framework described in this project has been released as an open-source package; the scripts to perform the evaluation outlined here can be applied directly to real BGE data and to larger cohorts as they become available.
 
+= Code Availability
 
+The consensus calling and evaluation framework described in this study is implemented in `consensuscnv`, an open-source Python package released under the GNU General Public License v3.0 or later.
+The package provides the parsing of caller, benchmark, and SNP microarray outputs, the construction of consensus call sets, and the binary classification of call sets against a benchmark, through the `consensuscnv` command-line interface.
+It is distributed through the Python Package Index at #link("https://pypi.org/project/consensuscnv/")[pypi.org/project/consensuscnv] and can be installed with `pip install consensuscnv` (Python 3.12 or later); all results in this study were produced with version 0.3.0.
+The code specific to this manuscript is not part of the distributed package and is available only from the GitHub repository at #link("https://github.com/limenode/consensuscnv")[github.com/limenode/consensuscnv], which also holds the package source.
+Its `manuscript` directory contains the scripts that generate every figure, table, and quantitative result in the main text and the Supplementary Information, each annotated with the section in which its output is used.
+Versions of the external CNV callers and supporting tools are given in the Methods.
+
+= Data Availability
+
+All data analyzed in this study are publicly available.
+The high-coverage WGS alignments of the thirteen individuals were obtained from the 1000G_2504_high_coverage collection of the International Genome Sample Resource (IGSR, #link("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/")[ftp.1000genomes.ebi.ac.uk/vol1/ftp]), and the SNP microarray intensities from the Broad Institute genotyping data supporting the 1000 Genomes Project phase 3 release (#link("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip/broad_intensities/")[release/20130502/supporting/hd_genotype_chip]).
+The three benchmark call sets were obtained from the IGSR data collections: the 1000 Genomes high-coverage SV call set, freeze V3 #c[Byrska-Bishop 2022] (#link("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20210124.SV_Illumina_Integration/")[1000G_2504_high_coverage/working/20210124.SV_Illumina_Integration]); the HGSVC3 release 1.0 call set #c[Logsdon 2025] (#link("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/release/Variant_Calls/1.0/GRCh38/")[HGSVC3/release/Variant_Calls/1.0/GRCh38]); and the ONT Vienna svim-asm call set with its SVAN annotation, release 1.1 #c[Schloissnig 2025] (#link("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1KG_ONT_VIENNA/release/v1.1/svim-asm-hg38/")[1KG_ONT_VIENNA/release/v1.1/svim-asm-hg38]).
+The hg38 chain files and the annotation tables from which the excluded regions were derived were obtained from the UCSC Genome Browser (#link("https://hgdownload.soe.ucsc.edu/goldenPath/hg38/")[hgdownload.soe.ucsc.edu/goldenPath/hg38]).
+The list of the thirteen individuals, the genome and excluded-region files used for every analysis, and the script that derives the ONT Vienna duplication records from the SVAN annotation are provided in the GitHub repository described under Code Availability.
 
 = References
 
