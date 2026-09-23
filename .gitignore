@@ -7,7 +7,6 @@ pixi.toml
 # python cache files
 __pycache__/
 .ruff_cache/
-.pytest_cache/
 
 # python packaging build artifacts
 *.egg-info/
@@ -30,6 +29,7 @@ __marimo__/
 internal.config*
 
 # tests
+.pytest_cache/
 
 # vscode settings
 .vscode/
