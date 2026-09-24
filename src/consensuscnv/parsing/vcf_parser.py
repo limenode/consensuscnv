@@ -22,6 +22,8 @@ from consensuscnv.utils import (
 # `bases_removed_excluded` is the full span of the dropped calls;
 # `bases_masked_excluded` is only the part actually inside the mask. Their ratio
 # is the collateral cost of dropping whole calls instead of trimming them.
+# `calls_trimmed_excluded` / `bases_trimmed_excluded` count kept calls whose ends
+# were trimmed out of the mask, and the bases that trimming took off them.
 PARSING_STAT_KEYS = (
     "total_call_count",
     "total_del_call_count",
@@ -46,6 +48,8 @@ PARSING_STAT_KEYS = (
     "bases_del_removed_excluded",
     "bases_dup_removed_excluded",
     "bases_masked_excluded",
+    "calls_trimmed_excluded",
+    "bases_trimmed_excluded",
 )
 
 def expand_pattern(pattern: str) -> dict[str, Path]:
@@ -202,12 +206,15 @@ def _process_single_vcf_to_df(
     chromosomes: Collection[str],
     lifter: ChainFile | None = None,
     size_change_treshold: float = 0.1,
-    max_excluded_fraction: float = 0.0,
+    *,
+    max_excluded_fraction: float,
+    trim_excluded_ends: bool,
 ) -> tuple[pd.DataFrame, dict]:
     """Process a single VCF file and convert it to a DataFrame with BED-like format.
     If a lifter is provided, apply liftover to the coordinates. Calls overlapping
     `excluded_regions` by more than `max_excluded_fraction` of their length are
-    dropped whole (0.0 drops on any overlap).
+    dropped whole (0.0 drops on any overlap); with `trim_excluded_ends`, a kept
+    call's ends are trimmed out of the mask (`ExclusionMask.apply`).
     Returns a tuple of (DataFrame, statistics).
     """
 
@@ -265,7 +272,10 @@ def _process_single_vcf_to_df(
 
             start, end = lifted
 
-        if excluded_regions.is_excluded(chrom, start, end, max_excluded_fraction):
+        kept = excluded_regions.apply(
+            chrom, start, end, max_excluded_fraction, trim_excluded_ends
+        )
+        if kept is None:
             stats["calls_removed_excluded"] += 1
             stats["bases_removed_excluded"] += end - start
             stats["bases_masked_excluded"] += excluded_regions.overlap_bp(chrom, start, end)
@@ -273,6 +283,12 @@ def _process_single_vcf_to_df(
                 stats[f"calls_{kind}_removed_excluded"] += 1
                 stats[f"bases_{kind}_removed_excluded"] += end - start
             continue
+
+        trimmed = (end - start) - (kept[1] - kept[0])
+        if trimmed:
+            stats["calls_trimmed_excluded"] += 1
+            stats["bases_trimmed_excluded"] += trimmed
+        start, end = kept
 
         records.append((chrom, start, end, svtype))
 
@@ -353,6 +369,7 @@ def process_vcfs_to_beds(
                     config.chromosomes,
                     liftover.lifter if liftover else None,
                     max_excluded_fraction=config.max_excluded_fraction,
+                    trim_excluded_ends=config.trim_excluded_ends,
                 )
 
                 statistics["experimental_name"] = experimental_name

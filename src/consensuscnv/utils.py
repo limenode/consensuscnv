@@ -136,10 +136,8 @@ class PipelineConfig:
     experimental: dict[str, dict[str, str]]                # call_set -> {tool_label: glob_pattern}
     output_dir: Path
     genome_file: Path
-    layout: OutputLayout              # derived from output_dir
-    # The analysis domain, ordered, derived from `genome_file`. Parsers drop any
-    # record on a contig outside it; `build_callset` sorts into this order.
-    chromosomes: tuple[str, ...]
+    layout: OutputLayout            # derived from output_dir
+    chromosomes: tuple[str, ...]    # `build_callset` sorts into this order.
     consensus: ConsensusParams = field(default_factory=ConsensusParams)
     evaluation: EvaluationParams = field(default_factory=EvaluationParams)
 
@@ -148,9 +146,8 @@ class PipelineConfig:
     benchmark: dict[str, str] = field(default_factory=dict)  # label -> local path or URL
     liftover: dict[str, dict[str, str]] = field(default_factory=dict)
     excluded_regions_file: str | None = None
-    # Fraction of a call that may lie inside an excluded region before the call is
-    # dropped whole. 0.0 drops on any overlap at all.
-    max_excluded_fraction: float = 0.01
+    max_excluded_fraction: float = 0.5
+    trim_excluded_ends: bool = True
     sample_list_file: str | None = None   # newline-separated allowlist; None keeps all samples
 
     @classmethod
@@ -173,6 +170,7 @@ class PipelineConfig:
             max_excluded_fraction=float(
                 raw.get('max_excluded_fraction', cls.max_excluded_fraction)
             ),
+            trim_excluded_ends=raw.get('trim_excluded_ends', cls.trim_excluded_ends),
             sample_list_file=raw.get('sample_list_file') or None,
         )
 
@@ -244,6 +242,10 @@ class PipelineConfig:
         if not 0.0 <= self.max_excluded_fraction <= 1.0:
             problems.append(
                 f"max_excluded_fraction is {self.max_excluded_fraction}, outside [0.0, 1.0]"
+            )
+        if not isinstance(self.trim_excluded_ends, bool):
+            problems.append(
+                f"trim_excluded_ends is {self.trim_excluded_ends!r}; expected true or false"
             )
 
         problems += self.consensus.problems()

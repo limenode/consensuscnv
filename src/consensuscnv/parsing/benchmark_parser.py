@@ -36,6 +36,8 @@ BENCHMARK_STAT_KEYS = (
     "calls_dup_removed_excluded",
     "bases_removed_excluded",
     "bases_masked_excluded",
+    "calls_trimmed_excluded",
+    "bases_trimmed_excluded",
 )
 
 # --------------------------------------------------------------------------- #
@@ -227,7 +229,10 @@ def process_benchmarks_to_beds(
                     stats[f"total_{svtype.lower()}_call_count"] += len(sample_ids)
 
                 # After liftover, so the mask sees target-assembly coordinates.
-                if excluded_regions.is_excluded(chrom, start, end, config.max_excluded_fraction):
+                kept = excluded_regions.apply(
+                    chrom, start, end, config.max_excluded_fraction, config.trim_excluded_ends
+                )
+                if kept is None:
                     masked = excluded_regions.overlap_bp(chrom, start, end)
                     stats["records_removed_excluded"] += 1
                     stats["calls_removed_excluded"] += n_calls
@@ -236,6 +241,12 @@ def process_benchmarks_to_beds(
                     for svtype, sample_ids in carriers_by_type.items():
                         stats[f"calls_{svtype.lower()}_removed_excluded"] += len(sample_ids)
                     continue
+
+                trimmed = size - (kept[1] - kept[0])
+                if trimmed:
+                    stats["calls_trimmed_excluded"] += n_calls
+                    stats["bases_trimmed_excluded"] += trimmed * n_calls
+                start, end = kept
 
                 # Open one handle per (sample_id) lazily, so no empty files are made.
                 for svtype, sample_ids in carriers_by_type.items():
@@ -259,6 +270,12 @@ def process_benchmarks_to_beds(
                 f"({stats['records_removed_excluded']:,} records) overlapping the "
                 f"exclusion mask, {stats['bases_removed_excluded'] / 1e6:,.1f} Mb removed, "
                 f"{stats['bases_masked_excluded'] / 1e6:,.1f} Mb of it inside the mask"
+            )
+        if stats["calls_trimmed_excluded"]:
+            print(
+                f"  {bench_name}: trimmed the ends of {stats['calls_trimmed_excluded']:,} "
+                f"calls out of the exclusion mask, "
+                f"{stats['bases_trimmed_excluded'] / 1e6:,.1f} Mb removed"
             )
 
         liftover_stats[bench_name] = {

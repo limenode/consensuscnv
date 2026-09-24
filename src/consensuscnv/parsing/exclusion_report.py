@@ -6,11 +6,13 @@ per carrier, PennCNV records are already per-sample -- so they cannot simply be
 concatenated. `exclusion_summary` normalises all three onto a common per-call
 schema, one row per (input type, dataset, source).
 
-`collateral` is total bases removed divided by the bases actually inside the mask.
-Whole calls are dropped rather than trimmed, so this is what that policy costs.
-A value near 1.0 means the dropped calls sat almost entirely inside the mask to
-begin with and the policy is close to free; a large value would mean the mask is
-amputating mostly-clean calls.
+`collateral` is total bases removed divided by the bases actually inside the mask,
+over the calls dropped whole. A value near 1.0 means the dropped calls sat almost
+entirely inside the mask to begin with and the policy is close to free; a large
+value would mean the mask is amputating mostly-clean calls.
+
+`n_trimmed` / `mb_trimmed` cover the calls that were kept but had their ends
+trimmed out of the mask (`trim_excluded_ends`), and the bases trimming took off.
 """
 
 import pandas as pd
@@ -28,6 +30,8 @@ _COMMON_COLUMNS = (
     "calls_dup_removed_excluded",
     "bases_removed_excluded",
     "bases_masked_excluded",
+    "calls_trimmed_excluded",
+    "bases_trimmed_excluded",
 )
 
 SUMMARY_COLUMNS = (
@@ -44,12 +48,15 @@ SUMMARY_COLUMNS = (
     "pct_bases_removed",
     "collateral",
     "mean_removed_kb",
+    "n_trimmed",
+    "mb_trimmed",
 )
 
 # The compact view. The rest stay on the frame for anyone who wants them.
 _DISPLAY_COLUMNS = (
     "input_type", "dataset", "source", "n_calls", "n_removed", "pct_removed",
-    "pct_del_removed", "pct_dup_removed", "mb_removed", "collateral",
+    "pct_del_removed", "pct_dup_removed", "mb_removed", "collateral", "n_trimmed",
+    "mb_trimmed",
 )
 
 
@@ -130,9 +137,11 @@ def exclusion_summary(
         table["bases_removed_excluded"], table["bases_masked_excluded"]
     )
     table["mean_removed_kb"] = _safe_div(table["bases_removed_excluded"], table["n_removed"]) / 1e3
+    table["n_trimmed"] = table["calls_trimmed_excluded"]
+    table["mb_trimmed"] = table["bases_trimmed_excluded"] / 1e6
 
     ordered = table[list(SUMMARY_COLUMNS)].copy()
-    for column in ("n_calls", "n_removed"):
+    for column in ("n_calls", "n_removed", "n_trimmed"):
         ordered[column] = ordered[column].astype("int64")
     return ordered.sort_values(["input_type", "dataset", "source"], ignore_index=True)
 
@@ -146,6 +155,8 @@ def format_exclusion_summary(summary: pd.DataFrame, full: bool = False) -> str:
     formatters = {
         "n_calls": "{:,.0f}".format,
         "n_removed": "{:,.0f}".format,
+        "n_trimmed": "{:,.0f}".format,
+        "mb_trimmed": "{:,.1f}".format,
         "mb_removed": "{:,.1f}".format,
         "mb_masked": "{:,.1f}".format,
         "mean_removed_kb": "{:,.1f}".format,
