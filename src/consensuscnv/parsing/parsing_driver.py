@@ -12,7 +12,8 @@ def parse_input_files(config: PipelineConfig) -> tuple[pd.DataFrame, pd.DataFram
     """Runs parsers for experimental, control, and benchmark datasets.
 
     A record is dropped when it falls inside the exclusion mask by more than
-    `config.max_excluded_fraction` of its length.
+    `config.max_excluded_fraction` of its length; otherwise it is kept whole, with
+    its ends trimmed out of the mask when `config.trim_excluded_ends` is set.
     """
 
     excluded_regions = ExclusionMask.load(config.excluded_regions_file)

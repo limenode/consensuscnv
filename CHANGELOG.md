@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **`trim_excluded_ends`** config key, default `true`. A call kept by the
+  exclusion mask has any end that falls inside an excluded region trimmed back
+  to that region's edge. Regions wholly inside the call are left in place, so a
+  call is never split. `ExclusionMask.trim_ends` and `ExclusionMask.apply`
+  implement it, and every parser (experimental, control, benchmark) goes through
+  `apply`. The exclusion report gains `n_trimmed` and `mb_trimmed`.
+
+### Changed
+
+- **`max_excluded_fraction` defaults to 0.5**, was 0.01. A call is dropped only
+  when the mask covers more than half of it (every overlapping region counts
+  toward the total); otherwise it is kept whole. At 0.01 a small excluded island
+  inside a large call vetoed it: a region of length L dropped every call shorter
+  than about 100 L containing it. Runs that relied on the old default must now
+  set `max_excluded_fraction: 0.01` explicitly.
+
 ## 0.3.0
 
 The first release on PyPI: `pip install consensuscnv`. The overlap graph became

@@ -32,9 +32,16 @@ sample_list_file: "/path/to/samples.txt"
 # `consensuscnv init` writes the hg38 centromeres and gaps beside this file.
 excluded_regions_file: "excluded_regions_hg38.bed"
 
-# How much of a call may lie inside an excluded region before the whole call is
-# dropped, as a fraction of its length. 0.0 drops on any overlap. Default: 0.01
-max_excluded_fraction: 0.01
+# How much of a call may lie inside the excluded regions before the whole call is
+# dropped, as a fraction of its length. Every region the call overlaps counts
+# toward the total. Below it the call is kept whole: excluded regions inside it
+# stay inside it, and calls are never split. 0.0 drops on any overlap. Default: 0.5
+max_excluded_fraction: 0.5
+
+# Trim the ends of a kept call that fall inside an excluded region back to the
+# region's edge [true/false]. Only the ends move; excluded regions inside the call
+# are left in place. Default: true
+trim_excluded_ends: true
 
 # Consensus calling parameters [optional]
 consensus:

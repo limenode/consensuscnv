@@ -58,6 +58,8 @@ PENNCNV_STAT_KEYS = (
     "calls_dup_removed_excluded",
     "bases_removed_excluded",
     "bases_masked_excluded",
+    "calls_trimmed_excluded",
+    "bases_trimmed_excluded",
 )
 
 
@@ -120,7 +122,10 @@ def process_penncnv_to_beds(
                     stats[f"total_{kind}_call_count"] += 1
 
                 # After liftover, so the mask sees target-assembly coordinates.
-                if excluded_regions.is_excluded(chrom, start, end, config.max_excluded_fraction):
+                kept = excluded_regions.apply(
+                    chrom, start, end, config.max_excluded_fraction, config.trim_excluded_ends
+                )
+                if kept is None:
                     stats["calls_removed_excluded"] += 1
                     stats["bases_removed_excluded"] += size
                     stats["bases_masked_excluded"] += excluded_regions.overlap_bp(
@@ -129,6 +134,12 @@ def process_penncnv_to_beds(
                     if kind:
                         stats[f"calls_{kind}_removed_excluded"] += 1
                     continue
+
+                trimmed = size - (kept[1] - kept[0])
+                if trimmed:
+                    stats["calls_trimmed_excluded"] += 1
+                    stats["bases_trimmed_excluded"] += trimmed
+                start, end = kept
 
                 # Open one handle per (sample_id) lazily, so no empty files are made.
                 fh = handles.get(sample_id)
@@ -150,6 +161,12 @@ def process_penncnv_to_beds(
                 f"overlapping the exclusion mask, "
                 f"{stats['bases_removed_excluded'] / 1e6:,.1f} Mb removed, "
                 f"{stats['bases_masked_excluded'] / 1e6:,.1f} Mb of it inside the mask"
+            )
+        if stats["calls_trimmed_excluded"]:
+            print(
+                f"  {control_name}: trimmed the ends of {stats['calls_trimmed_excluded']:,} "
+                f"calls out of the exclusion mask, "
+                f"{stats['bases_trimmed_excluded'] / 1e6:,.1f} Mb removed"
             )
 
         # Recorded unconditionally: a control that lost nothing still needs a row,

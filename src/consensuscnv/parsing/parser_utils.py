@@ -72,7 +72,14 @@ def _merge_regions(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
 
 @dataclass(frozen=True, slots=True)
 class ExclusionMask:
-    """Genome regions for subtraction/exclusion from other CNV call sets."""
+    """Genome regions for subtraction/exclusion from other CNV call sets.
+
+    The policy the parsers apply through `apply`: a call is dropped whole when the
+    merged mask covers more than `max_excluded_fraction` of it, every overlapping
+    region counting toward that total; otherwise it is kept whole, with its ends
+    optionally trimmed out of the mask. Mask regions inside a kept call stay inside
+    it -- calls are never split.
+    """
 
     regions: dict[str, list[tuple[int, int]]]
 
@@ -148,3 +155,39 @@ class ExclusionMask:
             return False
         length = end - start
         return length <= 0 or covered > max_excluded_fraction * length
+
+    def trim_ends(self, chrom: str, start: int, end: int) -> tuple[int, int]:
+        """Move an end that falls inside a mask region out to that region's edge.
+
+        Regions wholly inside the call are left alone, so a call is never split.
+        Regions are merged and disjoint, so one step per end suffices. A call lying
+        entirely inside one region comes back empty (`start >= end`).
+        """
+        for region_start, region_end in self.overlapping(chrom, start, end):
+            if region_start <= start < region_end:
+                start = region_end
+            if region_start < end <= region_end:
+                end = region_start
+        return start, end
+
+    def apply(
+        self,
+        chrom: str,
+        start: int,
+        end: int,
+        max_excluded_fraction: float,
+        trim_ends: bool,
+    ) -> tuple[int, int] | None:
+        """The call as the mask leaves it: None when dropped, else its (start, end).
+
+        The masked fraction is measured on the call as given, before any trimming.
+        A call kept by the fraction but empty once trimmed -- possible only at
+        `max_excluded_fraction=1.0` -- is dropped too.
+        """
+        if self.is_excluded(chrom, start, end, max_excluded_fraction):
+            return None
+        if trim_ends:
+            start, end = self.trim_ends(chrom, start, end)
+            if start >= end:
+                return None
+        return start, end
